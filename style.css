@@ -110,6 +110,10 @@ button:hover {
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
+  display: grid;
+  grid-template-columns: 1fr 48px;
+  gap: 12px;
+  align-items: center;
   text-align: left;
   color: #f5f7fb;
   background: transparent;
@@ -121,6 +125,38 @@ button:hover {
   color: #172033;
   background: #ffcb05;
   outline: none;
+}
+
+.suggestion-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.suggestion-name {
+  overflow: hidden;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-number {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #93c5fd;
+}
+
+.suggestion-button:hover .suggestion-number,
+.suggestion-button:focus .suggestion-number {
+  color: #172033;
+}
+
+.suggestion-button img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  justify-self: end;
 }
 
 .secondary-button {

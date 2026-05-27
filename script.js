@@ -246,8 +246,28 @@ function formatApiName(name) {
     .join(" ");
 }
 
+function formatDexNumber(id) {
+  return `#${String(id).padStart(3, "0")}`;
+}
+
 function normalizePokemonName(name) {
   return name.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+function normalizePokemonSearchTerm(value) {
+  const searchText = value.trim().toLowerCase();
+  const numericMatch = searchText.match(/^#?0*(\d+)$/);
+
+  if (numericMatch) {
+    return numericMatch[1];
+  }
+
+  return searchText.replace(/\s+/g, "-");
+}
+
+function getPokemonIdFromUrl(url) {
+  const match = url.match(/\/pokemon\/(\d+)\/?$/);
+  return match ? Number(match[1]) : null;
 }
 
 async function loadPokemonList() {
@@ -259,7 +279,10 @@ async function loadPokemonList() {
     }
 
     const data = await response.json();
-    pokemonList = data.results.map((pokemon) => pokemon.name);
+    pokemonList = data.results.map((pokemon) => ({
+      name: pokemon.name,
+      id: getPokemonIdFromUrl(pokemon.url)
+    }));
   } catch (error) {
     pokemonList = [];
   }
@@ -271,15 +294,24 @@ function hideSuggestions() {
 }
 
 function renderSuggestions() {
-  const searchText = normalizePokemonName(searchInput.value);
+  const rawSearchText = searchInput.value.trim().toLowerCase();
+  const searchText = normalizePokemonName(rawSearchText);
 
-  if (!searchText) {
+  if (!rawSearchText) {
     hideSuggestions();
     return;
   }
 
+  const numericMatch = rawSearchText.match(/^#?0*(\d*)$/);
+  const numericSearchText = numericMatch ? numericMatch[1] : "";
   const suggestions = pokemonList
-    .filter((pokemonName) => pokemonName.startsWith(searchText))
+    .filter((pokemon) => {
+      if (numericSearchText) {
+        return pokemon.id && String(pokemon.id).startsWith(numericSearchText);
+      }
+
+      return pokemon.name.startsWith(searchText);
+    })
     .slice(0, 8);
 
   suggestionsArea.innerHTML = "";
@@ -294,10 +326,33 @@ function renderSuggestions() {
     button.className = "suggestion-button";
     button.type = "button";
     button.setAttribute("role", "option");
-    button.textContent = formatApiName(pokemonName);
+
+    const text = document.createElement("span");
+    text.className = "suggestion-text";
+
+    const name = document.createElement("strong");
+    name.className = "suggestion-name";
+    name.textContent = formatApiName(pokemonName.name);
+
+    text.append(name);
+
+    if (pokemonName.id) {
+      const number = document.createElement("span");
+      number.className = "suggestion-number";
+      number.textContent = formatDexNumber(pokemonName.id);
+      text.append(number);
+
+      const image = document.createElement("img");
+      image.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonName.id}.png`;
+      image.alt = "";
+      image.loading = "lazy";
+      button.append(text, image);
+    } else {
+      button.append(text);
+    }
 
     button.addEventListener("click", () => {
-      searchInput.value = pokemonName;
+      searchInput.value = pokemonName.name;
       hideSuggestions();
       searchPokemon();
     });
@@ -327,7 +382,7 @@ function renderPokemonResult(pokemon, groups) {
   const info = document.createElement("div");
 
   const title = document.createElement("h2");
-  title.textContent = pokemon.name;
+  title.textContent = `${pokemon.name} ${formatDexNumber(pokemon.id)}`;
 
   const types = document.createElement("p");
   types.innerHTML = `<strong>Tipos:</strong> ${pokemon.types.join(" / ")}`;
@@ -429,24 +484,30 @@ async function fetchPokemonImage(name) {
   }
 }
 
-function findEvolutionContext(chain, currentSpeciesName, previousSpeciesName = null) {
-  if (chain.species.name === currentSpeciesName) {
-    return {
-      previous: previousSpeciesName,
-      current: chain.species.name,
-      next: chain.evolves_to.map((evolution) => evolution.species.name)
-    };
+function flattenEvolutionChain(chain, depth = 0) {
+  return [
+    {
+      name: chain.species.name,
+      depth
+    },
+    ...chain.evolves_to.flatMap((evolution) => flattenEvolutionChain(evolution, depth + 1))
+  ];
+}
+
+function getEvolutionStage(evolution, currentEvolution) {
+  if (evolution.name === currentEvolution.name) {
+    return "Atual";
   }
 
-  for (const evolution of chain.evolves_to) {
-    const result = findEvolutionContext(evolution, currentSpeciesName, chain.species.name);
-
-    if (result) {
-      return result;
-    }
+  if (evolution.depth < currentEvolution.depth) {
+    return "Anterior";
   }
 
-  return null;
+  if (evolution.depth > currentEvolution.depth) {
+    return "Próxima";
+  }
+
+  return "Alternativa";
 }
 
 async function getEvolutionCards(pokemonData) {
@@ -465,21 +526,17 @@ async function getEvolutionCards(pokemonData) {
     }
 
     const evolutionData = await evolutionResponse.json();
-    const context = findEvolutionContext(evolutionData.chain, speciesData.name);
+    const evolutionNames = flattenEvolutionChain(evolutionData.chain);
+    const currentEvolution = evolutionNames.find((evolution) => evolution.name === speciesData.name);
 
-    if (!context) {
+    if (!currentEvolution) {
       return [];
     }
-
-    const evolutionNames = [
-      ...(context.previous ? [{ name: context.previous, stage: "Anterior" }] : []),
-      { name: context.current, stage: "Atual" },
-      ...context.next.map((name) => ({ name, stage: "Próxima" }))
-    ];
 
     return Promise.all(
       evolutionNames.map(async (evolution) => ({
         ...evolution,
+        stage: getEvolutionStage(evolution, currentEvolution),
         displayName: formatApiName(evolution.name),
         image: await fetchPokemonImage(evolution.name)
       }))
@@ -490,7 +547,7 @@ async function getEvolutionCards(pokemonData) {
 }
 
 async function searchPokemon() {
-  const pokemonName = normalizePokemonName(searchInput.value);
+  const pokemonName = normalizePokemonSearchTerm(searchInput.value);
 
   if (!pokemonName) {
     hideSuggestions();
@@ -512,6 +569,7 @@ async function searchPokemon() {
 
     const pokemon = {
       name: formatApiName(data.name),
+      id: data.id,
       image: data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "icon.svg",
       types: defenseTypes.map((type) => typeNames[type]),
       abilities: data.abilities.map((item) => formatApiName(item.ability.name))
