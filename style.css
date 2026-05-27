@@ -2423,3 +2423,269 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Kelde.io design system */
+:root {
+  --keldeo-dark: #070b12;
+  --keldeo-panel: #0f1826;
+  --keldeo-panel-2: #152134;
+  --keldeo-cyan: #38d4e8;
+  --keldeo-cyan-soft: #7edff0;
+  --keldeo-cream: #f4e7bf;
+  --keldeo-gold: #d8b052;
+  --keldeo-text: #f7eed6;
+  --keldeo-muted: #aebdcc;
+  --keldeo-line: rgba(126, 223, 240, 0.2);
+  --keldeo-line-strong: rgba(126, 223, 240, 0.34);
+  --keldeo-danger: #d96363;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --button-height: 46px;
+  --control-height: 46px;
+  --transition: 160ms ease;
+  --shadow-control: 0 8px 22px rgba(0, 0, 0, 0.22);
+  --shadow-panel: 0 18px 42px rgba(0, 0, 0, 0.34);
+  --gradient-keldeo: linear-gradient(135deg, var(--keldeo-cyan) 0%, var(--keldeo-cyan-soft) 40%, var(--keldeo-cream) 72%, var(--keldeo-gold) 100%);
+  --gradient-keldeo-hover: linear-gradient(135deg, #48dff0 0%, #91e8f4 40%, #f8edce 72%, #e2bd64 100%);
+  --gradient-panel: linear-gradient(180deg, rgba(15, 24, 38, 0.98), rgba(8, 13, 22, 0.98));
+  --gradient-card: linear-gradient(180deg, rgba(21, 33, 52, 0.96), rgba(12, 20, 32, 0.96));
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+button {
+  display: inline-grid;
+  min-height: var(--button-height);
+  place-items: center;
+  padding: 0 14px;
+  color: #061018;
+  background: var(--gradient-keldeo);
+  border: 1px solid rgba(244, 231, 191, 0.34);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-control);
+  font-size: 0.94rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  transition: transform var(--transition), filter var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition), color var(--transition);
+}
+
+button:hover {
+  color: #061018;
+  background: var(--gradient-keldeo-hover);
+  border-color: rgba(244, 231, 191, 0.46);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+  filter: none;
+}
+
+button:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+button:disabled {
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(216, 176, 82, 0.7);
+  outline-offset: 2px;
+}
+
+input,
+select {
+  min-height: var(--control-height);
+  padding: 0 14px;
+  color: var(--keldeo-text);
+  background: rgba(5, 10, 17, 0.78);
+  border: 1px solid var(--keldeo-line);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+input:focus,
+select:focus {
+  background: rgba(7, 14, 23, 0.94);
+  border-color: var(--keldeo-cyan);
+  box-shadow: 0 0 0 3px rgba(56, 212, 232, 0.12);
+}
+
+.top-search-button,
+.tools-toggle-button,
+.calculator #calculate-button,
+.calculator #show-type-pokemon-button,
+.calculator .mobile-team-button,
+.pokemon-hero-actions button,
+.moves-more-button,
+.team-choice-button:hover,
+.team-choice-button:focus,
+.pokemon-tab.is-active,
+.team-tab.is-active {
+  color: #061018;
+  background: var(--gradient-keldeo);
+  border-color: rgba(244, 231, 191, 0.34);
+}
+
+.top-search-button:hover,
+.tools-toggle-button:hover,
+.tools-toggle-button[aria-expanded="true"],
+.calculator #calculate-button:hover,
+.calculator #show-type-pokemon-button:hover,
+.calculator .mobile-team-button:hover,
+.pokemon-hero-actions button:hover,
+.moves-more-button:hover,
+.pokemon-tab.is-active:hover,
+.team-tab.is-active:hover {
+  color: #061018;
+  background: var(--gradient-keldeo-hover);
+  border-color: rgba(244, 231, 191, 0.46);
+  filter: none;
+}
+
+.secondary-button,
+.icon-text-button,
+.moves-toggle-button,
+.team-choice-button,
+.pokemon-tab,
+.team-tab {
+  color: var(--keldeo-text);
+  background: rgba(16, 43, 74, 0.78);
+  border: 1px solid var(--keldeo-line-strong);
+  box-shadow: none;
+}
+
+.secondary-button:hover,
+.icon-text-button:hover,
+.moves-toggle-button:hover,
+.team-choice-button:hover,
+.pokemon-tab:hover,
+.team-tab:hover {
+  color: var(--keldeo-text);
+  background: rgba(22, 58, 88, 0.92);
+  border-color: rgba(126, 223, 240, 0.46);
+  box-shadow: var(--shadow-control);
+}
+
+.danger-button,
+.team-remove-button {
+  color: #fff7f2;
+  background: linear-gradient(135deg, #7d2630, var(--keldeo-danger));
+  border-color: rgba(217, 99, 99, 0.42);
+}
+
+.danger-button:hover,
+.team-remove-button:hover {
+  color: #fff7f2;
+  background: linear-gradient(135deg, #8c2d38, #e17272);
+  border-color: rgba(217, 99, 99, 0.58);
+}
+
+.suggestion-button,
+.type-match-card,
+.other-form-card,
+.evolution-card,
+.team-pokemon-card {
+  box-shadow: none;
+}
+
+.suggestion-button:hover,
+.suggestion-button:focus,
+.type-match-card:hover,
+.type-match-card:focus,
+.other-form-card:hover,
+.other-form-card:focus,
+.evolution-card:hover,
+.evolution-card:focus {
+  color: #061018;
+  background: var(--gradient-keldeo);
+  border-color: transparent;
+  box-shadow: var(--shadow-control);
+  filter: none;
+}
+
+.calculator,
+.result,
+.team-panel-content,
+.pokemon-info-section,
+.pokemon-team-section,
+.weaknesses-section,
+.moves-section,
+.type-match-section,
+.other-forms-section,
+.evolution-section,
+.base-stats {
+  background: var(--gradient-panel);
+  border: 1px solid var(--keldeo-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-panel);
+}
+
+.pokemon-card,
+.result-card,
+.analysis-card,
+.move-card,
+.type-match-card,
+.other-form-card,
+.evolution-card,
+.team-pokemon-card {
+  background: var(--gradient-card);
+  border: 1px solid var(--keldeo-line);
+  border-radius: var(--radius-sm);
+}
+
+.pokemon-tab,
+.team-tab {
+  min-height: var(--button-height);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.top-search input,
+.top-search-button,
+.tools-toggle-button,
+.calculator select,
+.calculator button,
+.pokemon-hero-actions button,
+.moves-toggle-button,
+.moves-more-button,
+.team-actions button,
+.team-remove-button,
+.team-choice-button {
+  min-height: var(--button-height);
+  border-radius: var(--radius-sm);
+}
+
+.mobile-panel-close {
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  color: var(--keldeo-text);
+  background: rgba(7, 14, 23, 0.86);
+  border: 1px solid var(--keldeo-line);
+  border-radius: 999px;
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+.mobile-panel-close:hover {
+  color: #061018;
+  background: var(--gradient-keldeo);
+}
+
+.app-toast,
+.team-choice-menu,
+.suggestions {
+  background: var(--gradient-panel);
+  border: 1px solid var(--keldeo-line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-panel);
+}
