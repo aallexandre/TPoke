@@ -1,12 +1,12 @@
 {
-  "name": "PokéWeakness",
-  "short_name": "PokeWeak",
-  "description": "Calculadora simples de fraquezas Pokemon.",
+  "name": "Kelde.io",
+  "short_name": "Kelde.io",
+  "description": "Ferramenta premium para analise Pokemon.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#101318",
-  "theme_color": "#101318",
+  "background_color": "#070b12",
+  "theme_color": "#070b12",
   "orientation": "portrait",
   "icons": [
     {
