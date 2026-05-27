@@ -2690,6 +2690,75 @@ select:focus {
   box-shadow: var(--shadow-panel);
 }
 
+/* Search autocomplete layout */
+.suggestion-button {
+  grid-template-columns: minmax(0, 1fr) 50px;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.suggestion-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 10px;
+  text-align: left;
+}
+
+.suggestion-name {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.suggestion-number {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.suggestion-button img {
+  justify-self: end;
+}
+
+/* Force autocomplete horizontal alignment */
+.suggestions .suggestion-button {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px;
+  text-align: left !important;
+}
+
+.suggestions .suggestion-text {
+  display: flex !important;
+  flex: 1 1 auto;
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 8px;
+  margin-right: auto;
+  text-align: left !important;
+}
+
+.suggestions .suggestion-name,
+.suggestions .suggestion-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left !important;
+}
+
+.suggestions .suggestion-number {
+  flex: 0 0 auto;
+}
+
+.suggestions .suggestion-button img {
+  flex: 0 0 50px;
+  margin-left: auto;
+}
+
 /* Pokemon card alignment parity */
 .pokemon-card,
 .pokemon-hero {
