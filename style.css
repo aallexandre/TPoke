@@ -1268,3 +1268,1070 @@ button:disabled {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* Kelde.io app shell v2 */
+body {
+  padding: 14px 0 34px;
+}
+
+.container {
+  width: min(1320px, calc(100% - 28px));
+}
+
+.app-header {
+  position: sticky;
+  z-index: 70;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: minmax(168px, 220px) minmax(280px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 12px max(14px, calc((100vw - 1320px) / 2)) 14px;
+  background: rgba(5, 8, 13, 0.94);
+  border-bottom: 1px solid rgba(126, 223, 240, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.brand-block h1 {
+  font-size: clamp(1.8rem, 3vw, 2.55rem);
+}
+
+.brand-block h1::after {
+  width: 54px;
+  height: 2px;
+  margin-top: 7px;
+}
+
+.top-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 116px;
+  gap: 10px;
+  align-items: end;
+}
+
+.top-search .search-field {
+  position: relative;
+}
+
+.top-search label {
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+.top-search input,
+.top-search-button,
+.top-actions button {
+  min-height: 48px;
+  border-radius: 12px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.team-open-button,
+.tools-toggle-button {
+  width: auto;
+  min-width: 116px;
+  padding: 0 15px;
+}
+
+.tools-toggle-button[aria-expanded="true"] {
+  color: #061018;
+  background: linear-gradient(135deg, var(--cyan), #f0d98f);
+  border-color: transparent;
+}
+
+.mobile-panel-heading,
+.mobile-team-button {
+  display: flex;
+}
+
+.calculator {
+  position: fixed;
+  z-index: 62;
+  top: 92px;
+  right: max(14px, calc((100vw - 1320px) / 2));
+  left: auto;
+  width: min(410px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-height: calc(100vh - 112px);
+  padding: 16px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.calculator.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.calculator .mobile-panel-heading,
+.calculator > button,
+.calculator .mobile-team-button {
+  grid-column: 1 / -1;
+}
+
+.mobile-panel-heading {
+  align-items: center;
+  justify-content: space-between;
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mobile-panel-close {
+  width: 40px;
+  min-height: 40px;
+  color: var(--text);
+  background: rgba(7, 14, 23, 0.74);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 1.1rem;
+}
+
+.result {
+  min-height: calc(100vh - 150px);
+  display: grid;
+  grid-template-columns: minmax(320px, 390px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 0;
+  padding: 16px;
+}
+
+.result:empty {
+  min-height: 300px;
+}
+
+.pokemon-hero {
+  position: sticky;
+  top: 118px;
+  grid-column: 1;
+  grid-template-columns: 132px minmax(0, 1fr);
+  padding: 16px;
+  background:
+    radial-gradient(circle at 74px 74px, rgba(56, 212, 232, 0.16), transparent 8rem),
+    linear-gradient(180deg, rgba(16, 43, 74, 0.94), rgba(10, 17, 28, 0.98));
+}
+
+.pokemon-hero > img {
+  width: 132px;
+  height: 132px;
+}
+
+.pokemon-number {
+  color: var(--gold);
+}
+
+.pokemon-hero-actions,
+.pokemon-team-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.pokemon-hero-actions button,
+.pokemon-team-actions button {
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+}
+
+.pokemon-tabs {
+  position: sticky;
+  top: 342px;
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  align-self: start;
+}
+
+.pokemon-tab {
+  justify-content: flex-start;
+  min-height: 46px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.pokemon-result-section {
+  grid-column: 2;
+  display: none;
+  min-height: 220px;
+  padding: 16px;
+}
+
+.pokemon-result-section.is-active {
+  display: block;
+  animation: resultEnter 180ms ease both;
+}
+
+.pokemon-info-section,
+.pokemon-team-section,
+.weaknesses-section {
+  background: linear-gradient(180deg, rgba(22, 34, 53, 0.94), rgba(13, 21, 34, 0.94));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.pokemon-info-section h2,
+.pokemon-team-section h2,
+.weaknesses-section h2 {
+  margin: 0 0 12px;
+}
+
+.weaknesses-section.is-active {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.moves-section.is-active,
+.type-match-section,
+.other-forms-section.is-active,
+.evolution-section.is-active {
+  display: block;
+}
+
+.team-tab-summary {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.team-pokemon-list-inline {
+  margin-top: 14px;
+}
+
+.compact-team-card .team-remove-button {
+  display: none;
+}
+
+.type-match-section {
+  grid-column: 1 / -1;
+}
+
+.suggestions {
+  z-index: 90;
+}
+
+@media (min-width: 681px) {
+  .mobile-command-center {
+    display: none;
+  }
+
+  .moves-list,
+  .type-match-list,
+  .team-pokemon-list,
+  .team-analysis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .other-forms-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 8px 0 24px;
+  }
+
+  .app-header {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    padding: 10px 9px 12px;
+  }
+
+  .brand-block {
+    min-width: 0;
+  }
+
+  .brand-block h1 {
+    font-size: 1.8rem;
+  }
+
+  .top-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) 88px;
+    order: 3;
+  }
+
+  .top-actions {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .team-open-button,
+  .tools-toggle-button {
+    min-width: auto;
+    min-height: 42px;
+    padding: 0 11px;
+    font-size: 0.86rem;
+  }
+
+  .team-open-button {
+    display: none;
+  }
+
+  .top-search input,
+  .top-search-button {
+    min-height: 50px;
+  }
+
+  .calculator {
+    top: 152px;
+    left: 9px;
+    right: 9px;
+    width: auto;
+    max-height: calc(100vh - 164px);
+    grid-template-columns: 1fr;
+  }
+
+  .result {
+    grid-template-columns: 1fr;
+    min-height: calc(100vh - 190px);
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .pokemon-hero {
+    position: static;
+    grid-column: 1;
+    grid-template-columns: 108px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .pokemon-hero > img {
+    width: 108px;
+    height: 108px;
+  }
+
+  .pokemon-card h2 {
+    font-size: 1.25rem;
+  }
+
+  .pokemon-tabs {
+    position: sticky;
+    z-index: 30;
+    top: 151px;
+    grid-column: 1;
+    display: flex;
+    gap: 8px;
+    margin: 0 -10px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    background: rgba(7, 11, 18, 0.94);
+    border-block: 1px solid rgba(126, 223, 240, 0.1);
+    backdrop-filter: blur(10px);
+    scrollbar-width: none;
+  }
+
+  .pokemon-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pokemon-tab {
+    min-width: 94px;
+    flex: 0 0 auto;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .pokemon-result-section {
+    grid-column: 1;
+    padding: 12px;
+  }
+
+  .weaknesses-section.is-active,
+  .base-stats-list,
+  .moves-list,
+  .type-match-list,
+  .team-pokemon-list,
+  .team-analysis,
+  .pokemon-hero-actions,
+  .pokemon-team-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .other-forms-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Compact usability pass */
+body {
+  padding: 14px 0 34px;
+}
+
+.app-header {
+  min-height: 60px;
+  grid-template-columns: 140px minmax(260px, 1fr) auto;
+  gap: 12px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.app-kicker {
+  display: none;
+}
+
+.brand-block h1 {
+  font-size: clamp(1.32rem, 2vw, 1.72rem);
+  line-height: 1;
+}
+
+.brand-block h1::after {
+  width: 34px;
+  margin-top: 5px;
+}
+
+.top-search {
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 8px;
+}
+
+.top-search label {
+  display: none;
+}
+
+.top-search input,
+.top-search-button,
+.top-actions button {
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 0.94rem;
+}
+
+.tools-toggle-button {
+  min-width: 112px;
+  padding: 0 12px;
+}
+
+.calculator {
+  top: 58px;
+  width: min(360px, calc(100vw - 20px));
+  max-height: calc(100vh - 70px);
+  padding: 12px;
+  gap: 10px;
+}
+
+.mobile-team-button {
+  display: flex;
+}
+
+.result {
+  min-height: calc(100vh - 96px);
+  grid-template-columns: minmax(270px, 320px) minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+}
+
+.pokemon-hero {
+  top: 82px;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border-color: rgba(126, 223, 240, 0.42);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32), inset 0 0 0 1px rgba(56, 212, 232, 0.1);
+}
+
+.pokemon-hero > img {
+  width: 112px;
+  height: 112px;
+}
+
+.pokemon-card h2 {
+  margin-bottom: 6px;
+  font-size: 1.35rem;
+}
+
+.pokemon-card p {
+  margin: 4px 0;
+}
+
+.pokemon-hero-actions {
+  grid-template-columns: 1fr;
+  margin-top: 10px;
+}
+
+.pokemon-hero-actions button {
+  min-height: 40px;
+}
+
+.pokemon-tabs {
+  top: 282px;
+  gap: 6px;
+}
+
+.pokemon-tab {
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+.pokemon-result-section {
+  min-height: 180px;
+  padding: 12px;
+}
+
+.base-stats {
+  margin-top: 10px;
+  padding: 12px;
+}
+
+.moves-list,
+.type-match-list,
+.team-pokemon-list,
+.team-analysis {
+  gap: 10px;
+}
+
+.team-panel {
+  z-index: 85;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  background: rgba(3, 6, 10, 0);
+  pointer-events: none;
+  backdrop-filter: none;
+  transition: background 160ms ease;
+}
+
+.team-panel.is-open {
+  pointer-events: auto;
+  background: rgba(3, 6, 10, 0.58);
+  animation: none;
+}
+
+.team-panel-content {
+  width: min(430px, 100%);
+  height: 100vh;
+  margin: 0 0 0 auto;
+  padding: 14px;
+  overflow-y: auto;
+  border-radius: 18px 0 0 18px;
+  transform: translateX(104%);
+  transition: transform 180ms ease;
+}
+
+.team-panel.is-open .team-panel-content {
+  transform: translateX(0);
+}
+
+.team-panel-header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  padding: 0 0 10px;
+  background: linear-gradient(180deg, rgba(13, 20, 32, 0.98), rgba(13, 20, 32, 0.86));
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 8px 0 24px;
+  }
+
+  .app-header {
+    min-height: 102px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 7px 9px 9px;
+  }
+
+  .brand-block h1 {
+    font-size: 1.38rem;
+  }
+
+  .top-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) 76px;
+  }
+
+  .tools-toggle-button {
+    min-height: 38px;
+    min-width: auto;
+    padding: 0 10px;
+  }
+
+  .calculator {
+    top: 104px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-height: calc(100vh - 116px);
+  }
+
+  .result {
+    min-height: calc(100vh - 130px);
+    padding: 8px;
+  }
+
+  .pokemon-hero {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .pokemon-hero > img {
+    width: 96px;
+    height: 96px;
+  }
+
+  .pokemon-tabs {
+    top: 102px;
+    padding: 7px 8px;
+  }
+
+  .pokemon-tab {
+    min-width: 86px;
+    min-height: 38px;
+  }
+
+  .team-panel-content {
+    width: min(390px, 100%);
+    border-radius: 0;
+  }
+}
+
+/* Header flow correction */
+:root {
+  --sticky-header-offset: 78px;
+}
+
+body {
+  padding: 14px 0 34px;
+  scroll-padding-top: var(--sticky-header-offset);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  left: auto;
+  right: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0 0 14px;
+  box-sizing: border-box;
+}
+
+.container {
+  padding-top: 0;
+}
+
+.result {
+  margin-top: 0;
+  scroll-margin-top: var(--sticky-header-offset);
+}
+
+.result:empty {
+  margin-top: 0;
+}
+
+.calculator {
+  top: var(--sticky-header-offset);
+  max-height: calc(100vh - var(--sticky-header-offset) - 12px);
+}
+
+.pokemon-hero {
+  top: calc(var(--sticky-header-offset) + 10px);
+}
+
+.pokemon-tabs {
+  top: calc(var(--sticky-header-offset) + 210px);
+}
+
+.pokemon-card,
+.pokemon-result-section,
+.type-match-section {
+  scroll-margin-top: var(--sticky-header-offset);
+}
+
+@media (max-width: 900px) {
+  :root {
+    --sticky-header-offset: 116px;
+  }
+
+  body {
+    padding: 8px 0 24px;
+  }
+
+  .app-header {
+    margin-bottom: 10px;
+  }
+
+  .calculator {
+    top: var(--sticky-header-offset);
+    max-height: calc(100vh - var(--sticky-header-offset) - 10px);
+  }
+
+  .pokemon-tabs {
+    top: var(--sticky-header-offset);
+  }
+}
+
+/* Topbar and tools polish */
+.app-header {
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: max(14px, calc((100vw - 1320px) / 2));
+  padding-right: max(14px, calc((100vw - 1320px) / 2));
+  background: linear-gradient(180deg, rgba(3, 6, 11, 0.98), rgba(7, 11, 18, 0.96));
+  border-bottom: 1px solid rgba(126, 223, 240, 0.13);
+}
+
+.tools-toggle-button {
+  color: #061018;
+  background: linear-gradient(135deg, #38d4e8 0%, #7edff0 42%, #f4e7bf 73%, #d8b052 100%);
+  border: 1px solid rgba(244, 231, 191, 0.28);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+.tools-toggle-button:hover,
+.tools-toggle-button[aria-expanded="true"] {
+  color: #061018;
+  background: linear-gradient(135deg, #48dff0 0%, #91e8f4 38%, #f7ebc9 72%, #e0bb63 100%);
+  border-color: rgba(244, 231, 191, 0.42);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+  filter: none;
+}
+
+.tools-toggle-button:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.calculator {
+  right: max(14px, calc((100vw - 1320px) / 2));
+  width: min(380px, calc(100vw - 28px));
+  gap: 11px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(12, 19, 30, 0.98), rgba(8, 13, 22, 0.98));
+  border: 1px solid rgba(126, 223, 240, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+}
+
+.calculator .field {
+  min-width: 0;
+}
+
+.calculator label {
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+.calculator select,
+.calculator button {
+  min-height: 46px;
+  border-radius: 12px;
+}
+
+.calculator > button {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.calculator .mobile-panel-heading {
+  min-height: 36px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgba(126, 223, 240, 0.12);
+}
+
+.mobile-team-button {
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  color: #061018;
+  background: linear-gradient(135deg, #38d4e8 0%, #7edff0 40%, #f3e2b1 72%, #d8b052 100%);
+  border: 1px solid rgba(244, 231, 191, 0.3);
+  font-weight: 900;
+  text-align: center;
+}
+
+.mobile-team-button:hover {
+  background: linear-gradient(135deg, #48dff0 0%, #92e8f4 40%, #f7ebc9 72%, #e0bb63 100%);
+  filter: none;
+}
+
+.mobile-team-button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .calculator {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    padding: 12px;
+    border-radius: 15px;
+  }
+}
+
+/* Premium actions and team picker */
+:root {
+  --sticky-header-offset: 96px;
+}
+
+.app-header {
+  min-height: 82px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+.top-search input,
+.top-search-button,
+.top-actions button {
+  min-height: 48px;
+}
+
+.calculator #calculate-button,
+.calculator #show-type-pokemon-button,
+.calculator .mobile-team-button {
+  display: grid;
+  place-items: center;
+  min-height: 50px;
+  color: #061018;
+  background: linear-gradient(135deg, #35d2e7 0%, #7edff0 38%, #f5e8c2 72%, #d8b052 100%);
+  border: 1px solid rgba(244, 231, 191, 0.34);
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  font-weight: 900;
+  text-align: center;
+}
+
+.calculator #calculate-button:hover,
+.calculator #show-type-pokemon-button:hover,
+.calculator .mobile-team-button:hover {
+  background: linear-gradient(135deg, #48dff0 0%, #91e8f4 38%, #f8edce 72%, #e2bd64 100%);
+  border-color: rgba(244, 231, 191, 0.46);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+  filter: none;
+}
+
+.calculator #calculate-button:active,
+.calculator #show-type-pokemon-button:active,
+.calculator .mobile-team-button:active {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.pokemon-hero-actions {
+  position: relative;
+}
+
+.team-choice-menu {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(8, 14, 24, 0.98), rgba(12, 20, 32, 0.98));
+  border: 1px solid rgba(126, 223, 240, 0.22);
+  border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  animation: liftIn 150ms ease both;
+}
+
+.team-choice-title {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.team-choice-button {
+  min-height: 42px;
+  color: var(--text);
+  background: rgba(16, 43, 74, 0.9);
+  border: 1px solid rgba(126, 223, 240, 0.22);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.team-choice-button:hover,
+.team-choice-button:focus {
+  color: #061018;
+  background: linear-gradient(135deg, #38d4e8 0%, #7edff0 42%, #f4e7bf 73%, #d8b052 100%);
+  outline: none;
+}
+
+.app-toast {
+  position: fixed;
+  z-index: 120;
+  right: max(14px, calc((100vw - 1320px) / 2));
+  bottom: 18px;
+  width: min(420px, calc(100vw - 28px));
+  padding: 14px 16px;
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(12, 20, 32, 0.98), rgba(8, 13, 22, 0.98));
+  border: 1px solid rgba(126, 223, 240, 0.24);
+  border-left: 4px solid var(--cyan);
+  border-radius: 14px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.app-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.app-toast.is-warning {
+  border-left-color: var(--gold);
+}
+
+.app-toast.is-error {
+  border-left-color: var(--danger);
+}
+
+@media (max-width: 900px) {
+  :root {
+    --sticky-header-offset: 136px;
+  }
+
+  .app-header {
+    min-height: 124px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .app-toast {
+    right: 10px;
+    bottom: 12px;
+    width: calc(100vw - 20px);
+  }
+}
+
+/* Tools panel containment */
+.container {
+  position: relative;
+}
+
+.calculator {
+  position: absolute;
+  z-index: 80;
+  top: calc(var(--sticky-header-offset) + 6px);
+  right: 0;
+  left: auto;
+  width: min(380px, 100%);
+  max-width: 100%;
+  max-height: min(620px, calc(100vh - var(--sticky-header-offset) - 18px));
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.calculator .mobile-panel-heading {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.calculator .mobile-panel-heading span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calculator .mobile-panel-close {
+  flex: 0 0 40px;
+}
+
+@media (max-width: 900px) {
+  .calculator {
+    top: calc(var(--sticky-header-offset) + 6px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: calc(100vh - var(--sticky-header-offset) - 16px);
+    margin: 0 auto;
+  }
+}
+
+/* Topbar alignment */
+.app-header {
+  grid-template-columns: 140px minmax(320px, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 8px;
+}
+
+.top-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 8px;
+  align-items: center;
+  align-self: center;
+}
+
+.top-actions {
+  align-self: center;
+}
+
+.top-search input,
+.top-search-button,
+.tools-toggle-button {
+  min-height: 46px;
+  height: 46px;
+}
+
+.tools-toggle-button {
+  display: grid;
+  min-width: 124px;
+  place-items: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .top-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) 78px auto;
+  }
+
+  .top-actions {
+    display: contents;
+  }
+
+  .tools-toggle-button {
+    min-width: 104px;
+  }
+}

@@ -20,7 +20,7 @@ const teamPokemonList = document.querySelector("#team-pokemon-list");
 const teamDefenseAnalysis = document.querySelector("#team-defense-analysis");
 const teamOffenseAnalysis = document.querySelector("#team-offense-analysis");
 const quickActionsPanel = document.querySelector("#quick-actions-panel");
-const mobileSearchToggle = document.querySelector("#mobile-search-toggle");
+const toolsToggleButton = document.querySelector("#tools-toggle-button");
 const mobilePanelClose = document.querySelector("#mobile-panel-close");
 const mobileTeamButton = document.querySelector("#mobile-team-button");
 
@@ -67,6 +67,7 @@ let recentlyAddedTeamPokemonId = null;
 let activeTeamIndex = 0;
 let teams = createDefaultTeams();
 let activePokemonTab = "info";
+let toastTimer = null;
 
 const typeNames = {
   normal: "Normal",
@@ -357,26 +358,23 @@ function isMobileViewport() {
   return window.matchMedia("(max-width: 680px)").matches;
 }
 
-function openQuickActionsPanel({ focusSearch = true } = {}) {
-  if (!quickActionsPanel || !mobileSearchToggle) {
+function openQuickActionsPanel() {
+  if (!quickActionsPanel || !toolsToggleButton) {
     return;
   }
 
+  closeTeamPanel();
   quickActionsPanel.classList.add("is-open");
-  mobileSearchToggle.setAttribute("aria-expanded", "true");
-
-  if (focusSearch) {
-    window.setTimeout(() => searchInput.focus(), 120);
-  }
+  toolsToggleButton.setAttribute("aria-expanded", "true");
 }
 
 function closeQuickActionsPanel() {
-  if (!quickActionsPanel || !mobileSearchToggle) {
+  if (!quickActionsPanel || !toolsToggleButton) {
     return;
   }
 
   quickActionsPanel.classList.remove("is-open");
-  mobileSearchToggle.setAttribute("aria-expanded", "false");
+  toolsToggleButton.setAttribute("aria-expanded", "false");
 }
 
 function closeQuickActionsPanelOnMobile() {
@@ -539,10 +537,15 @@ function createPokemonResultSection(tabId, className = "") {
   return section;
 }
 
+function refreshPokemonTeamSection() {
+  renderTeamPanel();
+}
+
 function renderPokemonResult(pokemon, groups) {
   resultArea.innerHTML = "";
 
-  const card = createPokemonResultSection("info", "pokemon-card");
+  const card = document.createElement("article");
+  card.className = "pokemon-card pokemon-hero";
 
   const image = document.createElement("img");
   image.src = pokemon.image;
@@ -556,27 +559,40 @@ function renderPokemonResult(pokemon, groups) {
   const types = document.createElement("p");
   types.innerHTML = `<strong>Tipos:</strong> ${pokemon.types.join(" / ")}`;
 
+  const number = document.createElement("p");
+  number.className = "pokemon-number";
+  number.innerHTML = `<strong>Numero:</strong> ${formatDexNumber(pokemon.id)}`;
+
+  const heroActions = document.createElement("div");
+  heroActions.className = "pokemon-hero-actions";
+
+  const addTeamButton = document.createElement("button");
+  addTeamButton.className = "secondary-button";
+  addTeamButton.type = "button";
+  addTeamButton.textContent = "Adicionar ao time";
+  addTeamButton.addEventListener("click", () => renderTeamChoiceMenu(heroActions, currentPokemon));
+
+  heroActions.append(addTeamButton);
+  info.append(title, number, types, heroActions);
+  card.append(image, info);
+
+  resultArea.append(card, createPokemonTabs());
+
+  const infoSection = createPokemonResultSection("info", "pokemon-info-section");
+  const infoTitle = document.createElement("h2");
+  infoTitle.textContent = "Info";
+
   const abilities = document.createElement("p");
   abilities.innerHTML = `<strong>Habilidades:</strong> ${pokemon.abilities.join(", ")}`;
 
   const baseStats = createBaseStatsSection(pokemon.baseStats);
 
-  const movesButton = document.createElement("button");
-  movesButton.className = "moves-toggle-button";
-  movesButton.type = "button";
-  movesButton.textContent = naturalMovesVisible ? "Esconder golpes naturais" : "Ver golpes naturais";
-  movesButton.addEventListener("click", toggleNaturalMoves);
-
-  info.append(title, types, abilities, baseStats, movesButton);
-  card.append(image, info);
-
-  resultArea.append(card, createPokemonTabs());
+  infoSection.append(infoTitle, abilities, baseStats);
+  resultArea.append(infoSection);
 
   renderNaturalMovesSection();
 
-  if (currentEvolutionCards) {
-    renderEvolutionSection(currentEvolutionCards);
-  }
+  renderEvolutionSection(currentEvolutionCards);
 
   const weaknessSection = createPokemonResultSection("weaknesses", "weaknesses-section");
   const weaknessTitle = document.createElement("h2");
@@ -1416,7 +1432,7 @@ async function searchPokemon() {
     renderError("Nao foi possivel buscar agora. Verifique sua conexao e tente novamente.");
   } finally {
     searchButton.disabled = false;
-    searchButton.textContent = "Buscar Pokémon";
+    searchButton.textContent = "Buscar";
   }
 }
 
@@ -1463,6 +1479,7 @@ function getActiveTeam() {
 }
 
 function openTeamPanel() {
+  closeQuickActionsPanel();
   teamPanel.classList.add("is-open");
   teamPanel.setAttribute("aria-hidden", "false");
   renderTeamPanel();
@@ -1487,6 +1504,62 @@ function setTeamMessage(message, isError = true) {
   teamMessage.classList.toggle("is-loading", message.startsWith("Buscando"));
 }
 
+function showToast(message, type = "success") {
+  let toast = document.querySelector(".app-toast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.className = "app-toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    document.body.append(toast);
+  }
+
+  toast.textContent = message;
+  toast.className = `app-toast is-visible is-${type}`;
+
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    toast.classList.remove("is-visible");
+  }, 3200);
+}
+
+function renderTeamChoiceMenu(parent, pokemon) {
+  const existingMenu = document.querySelector(".team-choice-menu");
+
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+
+  if (!pokemon) {
+    showToast("Não foi possível adicionar esse Pokémon ao time.", "error");
+    return;
+  }
+
+  const menu = document.createElement("div");
+  menu.className = "team-choice-menu";
+
+  const title = document.createElement("span");
+  title.className = "team-choice-title";
+  title.textContent = "Escolha o time";
+  menu.append(title);
+
+  teams.forEach((team, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "team-choice-button";
+    button.textContent = team.name || `Time ${index + 1}`;
+    button.addEventListener("click", () => {
+      menu.remove();
+      addPokemonObjectToTeam(index, pokemon, { showToastMessage: true });
+    });
+
+    menu.append(button);
+  });
+
+  parent.append(menu);
+}
+
 function renderTeamTabs() {
   teamTabs.innerHTML = "";
 
@@ -1500,6 +1573,7 @@ function renderTeamTabs() {
       activeTeamIndex = index;
       saveTeams();
       renderTeamPanel();
+      refreshPokemonTeamSection();
     });
 
     teamTabs.append(button);
@@ -1546,6 +1620,7 @@ function renderTeamPokemon() {
       activeTeam.pokemon.splice(index, 1);
       saveTeams();
       renderTeamPanel();
+      refreshPokemonTeamSection();
     });
 
     content.append(title, types, removeButton);
@@ -1564,23 +1639,71 @@ function addCurrentPokemonToTeam() {
 }
 
 function addPokemonObjectToActiveTeam(pokemon) {
-  const activeTeam = getActiveTeam();
+  return addPokemonObjectToTeam(activeTeamIndex, pokemon, { showPanelMessage: true });
+}
 
-  if (activeTeam.pokemon.length >= MAX_TEAM_SIZE) {
-    setTeamMessage("Este time já tem 6 Pokémon.");
+function addPokemonObjectToTeam(teamIndex, pokemon, options = {}) {
+  const targetTeam = teams[teamIndex];
+  const teamName = targetTeam?.name || `Time ${teamIndex + 1}`;
+  const showPanelMessage = options.showPanelMessage ?? false;
+  const showToastMessage = options.showToastMessage ?? false;
+
+  if (!targetTeam || !pokemon) {
+    if (showPanelMessage) {
+      setTeamMessage("Não foi possível adicionar esse Pokémon ao time.");
+    }
+
+    if (showToastMessage) {
+      showToast("Não foi possível adicionar esse Pokémon ao time.", "error");
+    }
+
     return false;
   }
 
-  if (activeTeam.pokemon.some((teamPokemon) => teamPokemon.id === pokemon.id)) {
-    setTeamMessage(`${pokemon.name} já está neste time.`);
+  if (targetTeam.pokemon.length >= MAX_TEAM_SIZE) {
+    const message = `O time ${teamName} já está cheio.`;
+
+    if (showPanelMessage) {
+      setTeamMessage(message);
+    }
+
+    if (showToastMessage) {
+      showToast(message, "warning");
+    }
+
     return false;
   }
 
-  activeTeam.pokemon.push({ ...pokemon });
+  if (targetTeam.pokemon.some((teamPokemon) => teamPokemon.id === pokemon.id)) {
+    const message = `${pokemon.name} já está no time ${teamName}.`;
+
+    if (showPanelMessage) {
+      setTeamMessage(message);
+    }
+
+    if (showToastMessage) {
+      showToast(message, "warning");
+    }
+
+    return false;
+  }
+
+  targetTeam.pokemon.push({ ...pokemon });
   recentlyAddedTeamPokemonId = pokemon.id;
   saveTeams();
   renderTeamPanel();
-  setTeamMessage(`${pokemon.name} foi adicionado ao time.`, false);
+  refreshPokemonTeamSection();
+
+  const message = `${pokemon.name} foi adicionado ao time ${teamName}.`;
+
+  if (showPanelMessage) {
+    setTeamMessage(message, false);
+  }
+
+  if (showToastMessage) {
+    showToast(message, "success");
+  }
+
   window.setTimeout(() => {
     recentlyAddedTeamPokemonId = null;
   }, 420);
@@ -1635,6 +1758,7 @@ function clearActiveTeam() {
   getActiveTeam().pokemon = [];
   saveTeams();
   renderTeamPanel();
+  refreshPokemonTeamSection();
   setTeamMessage("Time limpo.", false);
 }
 
@@ -1745,12 +1869,12 @@ calculateButton.addEventListener("click", () => {
   const defenseTypes = typeTwo ? [typeOne, typeTwo] : [typeOne];
   const groups = calculateWeaknesses(defenseTypes);
 
-  closeQuickActionsPanelOnMobile();
+  closeQuickActionsPanel();
   renderResult(groups);
 });
 
 showTypePokemonButton.addEventListener("click", () => {
-  closeQuickActionsPanelOnMobile();
+  closeQuickActionsPanel();
   showPokemonWithSelectedTypes();
 });
 
@@ -1774,13 +1898,15 @@ teamPokemonSearchInput.addEventListener("keydown", (event) => {
   }
 });
 
-teamOpenButton.addEventListener("click", openTeamPanel);
+if (teamOpenButton) {
+  teamOpenButton.addEventListener("click", openTeamPanel);
+}
 teamCloseButton.addEventListener("click", closeTeamPanel);
 teamAddCurrentButton.addEventListener("click", addCurrentPokemonToTeam);
 teamClearButton.addEventListener("click", clearActiveTeam);
 
-if (mobileSearchToggle) {
-  mobileSearchToggle.addEventListener("click", () => {
+if (toolsToggleButton) {
+  toolsToggleButton.addEventListener("click", () => {
     if (quickActionsPanel.classList.contains("is-open")) {
       closeQuickActionsPanel();
       return;
@@ -1796,7 +1922,6 @@ if (mobilePanelClose) {
 
 if (mobileTeamButton) {
   mobileTeamButton.addEventListener("click", () => {
-    closeQuickActionsPanelOnMobile();
     openTeamPanel();
   });
 }
@@ -1820,6 +1945,18 @@ document.addEventListener("click", (event) => {
 
   if (!event.target.closest(".team-search-field")) {
     hideTeamSuggestions();
+  }
+
+  if (
+    quickActionsPanel?.classList.contains("is-open") &&
+    !event.target.closest("#quick-actions-panel") &&
+    !event.target.closest("#tools-toggle-button")
+  ) {
+    closeQuickActionsPanel();
+  }
+
+  if (!event.target.closest(".pokemon-hero-actions")) {
+    document.querySelector(".team-choice-menu")?.remove();
   }
 });
 

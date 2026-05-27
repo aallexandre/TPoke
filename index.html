@@ -13,34 +13,31 @@
 </head>
 <body>
   <main class="container">
-    <div class="mobile-command-center">
-      <button id="mobile-search-toggle" class="mobile-search-toggle" type="button" aria-expanded="false" aria-controls="quick-actions-panel">
-        <span class="mobile-search-label">Buscar Pokemon, tipos ou time</span>
-        <span class="mobile-search-icon" aria-hidden="true">Go</span>
-      </button>
-    </div>
-
     <header class="app-header">
-      <div>
+      <div class="brand-block">
         <span class="app-kicker">Pokemon battle tool</span>
         <h1>Kelde.io</h1>
       </div>
-      <button id="team-open-button" class="team-open-button" type="button">Meu Time</button>
+
+      <div class="top-search">
+        <div class="search-field">
+          <label for="pokemon-search">Buscar Pokemon</label>
+          <input id="pokemon-search" type="search" placeholder="Nome, # ou numero">
+          <div id="pokemon-suggestions" class="suggestions" role="listbox"></div>
+        </div>
+        <button id="search-button" class="top-search-button" type="button">Buscar</button>
+      </div>
+
+      <div class="top-actions">
+        <button id="tools-toggle-button" class="tools-toggle-button" type="button" aria-expanded="false" aria-controls="quick-actions-panel">Ferramentas</button>
+      </div>
     </header>
 
     <section id="quick-actions-panel" class="calculator" aria-label="Calculadora de fraqueza Pokemon">
       <div class="mobile-panel-heading">
-        <span>Acoes rapidas</span>
+        <span>Ferramentas</span>
         <button id="mobile-panel-close" class="mobile-panel-close" type="button" aria-label="Fechar painel">x</button>
       </div>
-
-      <div class="search-field">
-        <label for="pokemon-search">Nome do Pokémon</label>
-        <input id="pokemon-search" type="search" placeholder="Ex: pikachu">
-        <div id="pokemon-suggestions" class="suggestions" role="listbox"></div>
-      </div>
-
-      <button id="search-button" class="secondary-button" type="button">Buscar Pokémon</button>
 
       <div class="field">
         <label for="type-one">Tipo 1</label>
@@ -94,7 +91,7 @@
 
       <button id="calculate-button" type="button">Calcular</button>
       <button id="show-type-pokemon-button" class="secondary-button" type="button">Mostrar Pokémon com essa tipagem</button>
-      <button id="mobile-team-button" class="secondary-button mobile-team-button" type="button">Acessar Meu Time</button>
+      <button id="mobile-team-button" class="secondary-button mobile-team-button" type="button">Meu Time</button>
     </section>
 
     <section id="result" class="result" aria-live="polite"></section>
