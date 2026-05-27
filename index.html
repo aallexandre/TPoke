@@ -16,6 +16,14 @@
     <h1>PokéWeakness</h1>
 
     <section class="calculator" aria-label="Calculadora de fraqueza Pokemon">
+      <div class="search-field">
+        <label for="pokemon-search">Nome do Pokémon</label>
+        <input id="pokemon-search" type="search" placeholder="Ex: pikachu">
+        <div id="pokemon-suggestions" class="suggestions" role="listbox"></div>
+      </div>
+
+      <button id="search-button" class="secondary-button" type="button">Buscar Pokémon</button>
+
       <div class="field">
         <label for="type-one">Tipo 1</label>
         <select id="type-one">

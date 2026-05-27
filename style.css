@@ -48,6 +48,7 @@ label {
 }
 
 select,
+input,
 button {
   width: 100%;
   min-height: 54px;
@@ -56,11 +57,16 @@ button {
   font-size: 1.05rem;
 }
 
-select {
+select,
+input {
   padding: 0 12px;
   color: #f5f7fb;
   background: #242b38;
   outline: 1px solid #3a4557;
+}
+
+input::placeholder {
+  color: #8f9bb0;
 }
 
 button {
@@ -74,6 +80,56 @@ button {
 
 button:hover {
   background: #ffd84a;
+}
+
+.search-field {
+  grid-column: 1 / -1;
+  position: relative;
+  text-align: left;
+}
+
+.suggestions {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  display: none;
+  overflow: hidden;
+  background: #202735;
+  border: 1px solid #3a4557;
+  border-radius: 8px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.suggestions.is-visible {
+  display: block;
+}
+
+.suggestion-button {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  text-align: left;
+  color: #f5f7fb;
+  background: transparent;
+  border-radius: 0;
+}
+
+.suggestion-button:hover,
+.suggestion-button:focus {
+  color: #172033;
+  background: #ffcb05;
+  outline: none;
+}
+
+.secondary-button {
+  background: #60a5fa;
+  color: #0f172a;
+}
+
+.secondary-button:hover {
+  background: #93c5fd;
 }
 
 .result {
@@ -92,6 +148,99 @@ button:hover {
 
 .result:empty {
   display: block;
+}
+
+.pokemon-card {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 16px;
+  background: #202735;
+  border: 1px solid #344052;
+  border-radius: 8px;
+}
+
+.pokemon-card img {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+}
+
+.pokemon-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  color: #ffcb05;
+  text-transform: capitalize;
+}
+
+.pokemon-card p {
+  margin: 6px 0;
+  line-height: 1.45;
+  color: #d9e2f1;
+}
+
+.evolution-section {
+  grid-column: 1 / -1;
+  padding: 16px;
+  background: #202735;
+  border: 1px solid #344052;
+  border-radius: 8px;
+}
+
+.evolution-section h2 {
+  margin: 0 0 14px;
+  font-size: 1.25rem;
+  color: #ffcb05;
+}
+
+.evolution-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.evolution-card {
+  display: flex;
+  min-height: 154px;
+  padding: 12px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #f5f7fb;
+  background: #181d26;
+  border: 1px solid #3a4557;
+  border-radius: 8px;
+}
+
+.evolution-card:hover,
+.evolution-card:focus {
+  color: #172033;
+  background: #ffcb05;
+  outline: none;
+}
+
+.evolution-card img {
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
+}
+
+.evolution-card strong {
+  font-size: 1rem;
+}
+
+.evolution-stage {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #93c5fd;
+}
+
+.evolution-card:hover .evolution-stage,
+.evolution-card:focus .evolution-stage {
+  color: #172033;
 }
 
 .result-card {
@@ -141,8 +290,31 @@ button:hover {
   }
 
   select,
+  input,
   button {
     min-height: 60px;
     font-size: 1.1rem;
+  }
+
+  .suggestion-button {
+    min-height: 56px;
+    font-size: 1.05rem;
+  }
+
+  .pokemon-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .evolution-list {
+    grid-template-columns: 1fr;
+  }
+
+  .evolution-card {
+    min-height: 120px;
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
   }
 }

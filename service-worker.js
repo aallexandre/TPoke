@@ -1,4 +1,5 @@
-const CACHE_NAME = "pokeweakness-v1";
+const CACHE_NAME = "pokeweakness-v4";
+const RUNTIME_CACHE_NAME = "pokeweakness-runtime-v1";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -21,7 +22,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .filter((cacheName) => ![CACHE_NAME, RUNTIME_CACHE_NAME].includes(cacheName))
           .map((cacheName) => caches.delete(cacheName))
       );
     })
@@ -35,7 +36,20 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(event.request).then((networkResponse) => {
+        if (!networkResponse || ![200, 0].includes(networkResponse.status)) {
+          return networkResponse;
+        }
+
+        return caches.open(RUNTIME_CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      });
     })
   );
 });
