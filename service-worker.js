@@ -1,4 +1,6 @@
-const CACHE_NAME = "keldeio-v3";
+const CACHE_VERSION = "v4";
+const CACHE_NAME = `keldeio-${CACHE_VERSION}`;
+const IMAGE_CACHE_NAME = `keldeio-images-${CACHE_VERSION}`;
 const APP_FILES = [
   "./",
   "./index.html",
@@ -15,6 +17,8 @@ const NETWORK_FIRST_FILES = new Set([
   new URL("./manifest.json", self.registration.scope).href
 ]);
 
+console.log(`[Kelde.io PWA] service worker cache ${CACHE_NAME}`);
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -30,7 +34,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .filter((cacheName) => ![CACHE_NAME, IMAGE_CACHE_NAME].includes(cacheName))
           .map((cacheName) => caches.delete(cacheName))
       );
     }).then(() => self.clients.claim())
@@ -45,20 +49,20 @@ self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
   const isAppFile = NETWORK_FIRST_FILES.has(requestUrl.href);
   const isNavigation = event.request.mode === "navigate";
+  const isImage = event.request.destination === "image";
 
   if (isNavigation || isAppFile) {
     event.respondWith(fetchAndUpdate(event.request, CACHE_NAME));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  if (isImage) {
+    event.respondWith(cacheFirst(event.request, IMAGE_CACHE_NAME));
+    return;
+  }
 
-      return fetchAndUpdate(event.request, CACHE_NAME);
-    })
+  event.respondWith(
+    fetchAndUpdate(event.request, CACHE_NAME)
   );
 });
 
@@ -87,4 +91,14 @@ function fetchAndUpdate(request, cacheName) {
         return undefined;
       });
     });
+}
+
+function cacheFirst(request, cacheName) {
+  return caches.match(request).then((cachedResponse) => {
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    return fetchAndUpdate(request, cacheName);
+  });
 }
