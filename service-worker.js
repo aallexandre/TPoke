@@ -1,4 +1,4 @@
-const CACHE_NAME = "pokeweakness-v6";
+const CACHE_NAME = "pokeweakness-v10";
 const RUNTIME_CACHE_NAME = "pokeweakness-runtime-v1";
 const APP_FILES = [
   "./",

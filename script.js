@@ -1,12 +1,65 @@
 const typeOneSelect = document.querySelector("#type-one");
 const typeTwoSelect = document.querySelector("#type-two");
 const calculateButton = document.querySelector("#calculate-button");
+const showTypePokemonButton = document.querySelector("#show-type-pokemon-button");
 const searchInput = document.querySelector("#pokemon-search");
 const searchButton = document.querySelector("#search-button");
 const suggestionsArea = document.querySelector("#pokemon-suggestions");
 const resultArea = document.querySelector("#result");
+const teamOpenButton = document.querySelector("#team-open-button");
+const teamCloseButton = document.querySelector("#team-close-button");
+const teamPanel = document.querySelector("#team-panel");
+const teamTabs = document.querySelector("#team-tabs");
+const teamNameInput = document.querySelector("#team-name-input");
+const teamPokemonSearchInput = document.querySelector("#team-pokemon-search");
+const teamPokemonSuggestionsArea = document.querySelector("#team-pokemon-suggestions");
+const teamMessage = document.querySelector("#team-message");
+const teamAddCurrentButton = document.querySelector("#team-add-current-button");
+const teamClearButton = document.querySelector("#team-clear-button");
+const teamPokemonList = document.querySelector("#team-pokemon-list");
+const teamDefenseAnalysis = document.querySelector("#team-defense-analysis");
+const teamOffenseAnalysis = document.querySelector("#team-offense-analysis");
+
+const TEAMS_STORAGE_KEY = "pokeweakness-teams";
+const ACTIVE_TEAM_STORAGE_KEY = "pokeweakness-active-team";
+const MAX_TEAMS = 6;
+const MAX_TEAM_SIZE = 6;
+const INITIAL_MOVES_LIMIT = 20;
+const TYPE_MATCH_LIMIT = 60;
+const VERSION_GROUP_ORDER = [
+  "red-blue",
+  "yellow",
+  "gold-silver",
+  "crystal",
+  "ruby-sapphire",
+  "emerald",
+  "firered-leafgreen",
+  "diamond-pearl",
+  "platinum",
+  "heartgold-soulsilver",
+  "black-white",
+  "black-2-white-2",
+  "x-y",
+  "omega-ruby-alpha-sapphire",
+  "sun-moon",
+  "ultra-sun-ultra-moon",
+  "lets-go-pikachu-lets-go-eevee",
+  "sword-shield",
+  "brilliant-diamond-and-shining-pearl",
+  "legends-arceus",
+  "scarlet-violet"
+];
 
 let pokemonList = [];
+let currentPokemon = null;
+let currentPokemonMoveEntries = [];
+let naturalMoves = [];
+let naturalMovesVisible = false;
+let naturalMovesExpanded = false;
+let naturalMovesLoadedFor = null;
+let currentEvolutionCards = [];
+let activeTeamIndex = 0;
+let teams = createDefaultTeams();
 
 const typeNames = {
   normal: "Normal",
@@ -288,17 +341,42 @@ async function loadPokemonList() {
   }
 }
 
+// Autocomplete carregado uma vez da PokéAPI e filtrado em memória.
 function hideSuggestions() {
-  suggestionsArea.innerHTML = "";
-  suggestionsArea.classList.remove("is-visible");
+  hideSuggestionList(suggestionsArea);
 }
 
 function renderSuggestions() {
-  const rawSearchText = searchInput.value.trim().toLowerCase();
+  renderPokemonSuggestions(searchInput, suggestionsArea, (pokemonName) => {
+    searchInput.value = pokemonName;
+    hideSuggestions();
+    searchPokemon();
+  });
+}
+
+function hideTeamSuggestions() {
+  hideSuggestionList(teamPokemonSuggestionsArea);
+}
+
+function renderTeamSuggestions() {
+  renderPokemonSuggestions(teamPokemonSearchInput, teamPokemonSuggestionsArea, (pokemonName) => {
+    teamPokemonSearchInput.value = pokemonName;
+    hideTeamSuggestions();
+    addPokemonToActiveTeam(pokemonName);
+  });
+}
+
+function hideSuggestionList(area) {
+  area.innerHTML = "";
+  area.classList.remove("is-visible");
+}
+
+function renderPokemonSuggestions(input, area, onSelect) {
+  const rawSearchText = input.value.trim().toLowerCase();
   const searchText = normalizePokemonName(rawSearchText);
 
   if (!rawSearchText) {
-    hideSuggestions();
+    hideSuggestionList(area);
     return;
   }
 
@@ -314,10 +392,10 @@ function renderSuggestions() {
     })
     .slice(0, 8);
 
-  suggestionsArea.innerHTML = "";
+  area.innerHTML = "";
 
   if (!suggestions.length) {
-    hideSuggestions();
+    hideSuggestionList(area);
     return;
   }
 
@@ -352,15 +430,13 @@ function renderSuggestions() {
     }
 
     button.addEventListener("click", () => {
-      searchInput.value = pokemonName.name;
-      hideSuggestions();
-      searchPokemon();
+      onSelect(pokemonName.name);
     });
 
-    suggestionsArea.append(button);
+    area.append(button);
   });
 
-  suggestionsArea.classList.add("is-visible");
+  area.classList.add("is-visible");
 }
 
 function renderWeaknessCards(groups) {
@@ -390,11 +466,259 @@ function renderPokemonResult(pokemon, groups) {
   const abilities = document.createElement("p");
   abilities.innerHTML = `<strong>Habilidades:</strong> ${pokemon.abilities.join(", ")}`;
 
-  info.append(title, types, abilities);
+  const baseStats = createBaseStatsSection(pokemon.baseStats);
+
+  const movesButton = document.createElement("button");
+  movesButton.className = "moves-toggle-button";
+  movesButton.type = "button";
+  movesButton.textContent = naturalMovesVisible ? "Esconder golpes naturais" : "Ver golpes naturais";
+  movesButton.addEventListener("click", toggleNaturalMoves);
+
+  info.append(title, types, abilities, baseStats, movesButton);
   card.append(image, info);
 
   resultArea.append(card);
+
+  if (naturalMovesVisible) {
+    renderNaturalMovesSection();
+  }
+
+  if (currentEvolutionCards.length) {
+    renderEvolutionSection(currentEvolutionCards);
+  }
+
   renderWeaknessCards(groups);
+}
+
+function getVersionGroupRank(versionGroupName) {
+  const index = VERSION_GROUP_ORDER.indexOf(versionGroupName);
+  return index === -1 ? -1 : index;
+}
+
+function getLatestLevelUpDetail(moveEntry) {
+  return moveEntry.version_group_details
+    .filter((detail) => detail.move_learn_method.name === "level-up")
+    .sort((first, second) => {
+      return getVersionGroupRank(second.version_group.name) - getVersionGroupRank(first.version_group.name);
+    })[0];
+}
+
+function getUniqueNaturalMoveEntries(moveEntries) {
+  const movesByName = new Map();
+
+  moveEntries.forEach((moveEntry) => {
+    const detail = getLatestLevelUpDetail(moveEntry);
+
+    if (!detail) {
+      return;
+    }
+
+    const existing = movesByName.get(moveEntry.move.name);
+
+    if (!existing || getVersionGroupRank(detail.version_group.name) > getVersionGroupRank(existing.detail.version_group.name)) {
+      movesByName.set(moveEntry.move.name, {
+        name: moveEntry.move.name,
+        url: moveEntry.move.url,
+        level: detail.level_learned_at || null,
+        detail
+      });
+    }
+  });
+
+  return [...movesByName.values()].sort((first, second) => {
+    const firstLevel = first.level ?? Number.POSITIVE_INFINITY;
+    const secondLevel = second.level ?? Number.POSITIVE_INFINITY;
+
+    return firstLevel - secondLevel || first.name.localeCompare(second.name);
+  });
+}
+
+function formatMoveValue(value, fallback = "-") {
+  return value === null || value === undefined ? fallback : String(value);
+}
+
+function formatMoveDamageClass(damageClass) {
+  const names = {
+    physical: "Físico",
+    special: "Especial",
+    status: "Status"
+  };
+
+  return names[damageClass] || formatApiName(damageClass);
+}
+
+function formatBaseStats(stats) {
+  const statNames = {
+    hp: "HP",
+    attack: "Ataque",
+    defense: "Defesa",
+    "special-attack": "Ataque Esp.",
+    "special-defense": "Defesa Esp.",
+    speed: "Velocidade"
+  };
+
+  const items = stats.map((stat) => ({
+    name: statNames[stat.stat.name] || formatApiName(stat.stat.name),
+    value: stat.base_stat
+  }));
+
+  return {
+    items,
+    total: items.reduce((sum, stat) => sum + stat.value, 0)
+  };
+}
+
+function createBaseStatsSection(baseStats) {
+  const section = document.createElement("section");
+  section.className = "base-stats";
+
+  const title = document.createElement("h3");
+  title.textContent = "Status Base";
+
+  const list = document.createElement("div");
+  list.className = "base-stats-list";
+
+  baseStats.items.forEach((stat) => {
+    const row = document.createElement("p");
+    row.innerHTML = `<span>${stat.name}</span><strong>${stat.value}</strong>`;
+    list.append(row);
+  });
+
+  const total = document.createElement("p");
+  total.className = "base-stats-total";
+  total.innerHTML = `<span>Total</span><strong>${baseStats.total}</strong>`;
+  list.append(total);
+
+  section.append(title, list);
+  return section;
+}
+
+async function loadNaturalMoves() {
+  if (!currentPokemon || naturalMovesLoadedFor === currentPokemon.apiName) {
+    return;
+  }
+
+  naturalMoves = [];
+  naturalMovesLoadedFor = currentPokemon.apiName;
+  renderNaturalMovesSection("Carregando golpes naturais...");
+
+  try {
+    const moveEntries = getUniqueNaturalMoveEntries(currentPokemonMoveEntries);
+
+    naturalMoves = await Promise.all(
+      moveEntries.map(async (moveEntry) => {
+        const response = await fetch(moveEntry.url);
+
+        if (!response.ok) {
+          throw new Error("move-load-failed");
+        }
+
+        const moveData = await response.json();
+
+        return {
+          name: formatApiName(moveEntry.name),
+          level: moveEntry.level,
+          type: typeNames[moveData.type.name] || formatApiName(moveData.type.name),
+          category: formatMoveDamageClass(moveData.damage_class.name),
+          power: moveData.power,
+          accuracy: moveData.accuracy
+        };
+      })
+    );
+
+    if (!naturalMovesVisible) {
+      return;
+    }
+
+    renderNaturalMovesSection();
+  } catch (error) {
+    naturalMovesLoadedFor = null;
+
+    if (!naturalMovesVisible) {
+      return;
+    }
+
+    renderNaturalMovesSection("Não foi possível carregar os golpes agora.");
+  }
+}
+
+async function toggleNaturalMoves() {
+  naturalMovesVisible = !naturalMovesVisible;
+
+  if (!naturalMovesVisible) {
+    renderPokemonResult(currentPokemon, calculateWeaknesses(currentPokemon.typeIds));
+    return;
+  }
+
+  renderPokemonResult(currentPokemon, calculateWeaknesses(currentPokemon.typeIds));
+  await loadNaturalMoves();
+}
+
+function renderNaturalMovesSection(loadingMessage = "") {
+  const existingSection = document.querySelector(".moves-section");
+
+  if (existingSection) {
+    existingSection.remove();
+  }
+
+  const section = document.createElement("section");
+  section.className = "moves-section";
+
+  const title = document.createElement("h2");
+  title.textContent = "Golpes naturais";
+  section.append(title);
+
+  if (loadingMessage) {
+    const loading = document.createElement("p");
+    loading.className = "moves-loading";
+    loading.textContent = loadingMessage;
+    section.append(loading);
+  } else if (!naturalMoves.length) {
+    const empty = document.createElement("p");
+    empty.className = "moves-loading";
+    empty.textContent = "Nenhum golpe natural encontrado.";
+    section.append(empty);
+  } else {
+    const list = document.createElement("div");
+    list.className = "moves-list";
+
+    const visibleMoves = naturalMovesExpanded ? naturalMoves : naturalMoves.slice(0, INITIAL_MOVES_LIMIT);
+
+    visibleMoves.forEach((move) => {
+      const card = document.createElement("article");
+      card.className = "move-card";
+
+      const name = document.createElement("strong");
+      name.textContent = move.name;
+
+      const level = document.createElement("span");
+      level.textContent = move.level ? `Level ${move.level}` : "Level -";
+
+      const details = document.createElement("p");
+      details.textContent = `${move.type} | ${move.category} | Poder ${formatMoveValue(move.power)} | Precisão ${formatMoveValue(move.accuracy)}`;
+
+      card.append(name, level, details);
+      list.append(card);
+    });
+
+    section.append(list);
+
+    if (naturalMoves.length > INITIAL_MOVES_LIMIT && !naturalMovesExpanded) {
+      const moreButton = document.createElement("button");
+      moreButton.className = "moves-more-button";
+      moreButton.type = "button";
+      moreButton.textContent = "Mostrar mais golpes";
+      moreButton.addEventListener("click", () => {
+        naturalMovesExpanded = true;
+        renderNaturalMovesSection();
+      });
+
+      section.append(moreButton);
+    }
+  }
+
+  const pokemonCard = resultArea.querySelector(".pokemon-card");
+  pokemonCard.after(section);
 }
 
 function renderEvolutionSection(evolutions) {
@@ -442,11 +766,17 @@ function renderError(message) {
   resultArea.append(createResultCard("Nao encontrado", [message]));
 }
 
+function renderLoading(titleText, message) {
+  resultArea.innerHTML = "";
+  resultArea.append(createResultCard(titleText, [message]));
+}
+
 function setSelectedTypes(types) {
   typeOneSelect.value = types[0] ?? "";
   typeTwoSelect.value = types[1] ?? "";
 }
 
+// Busca por nome, alias com espaços ou número da Pokédex.
 async function fetchPokemon(name) {
   const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(name)}`);
 
@@ -484,6 +814,7 @@ async function fetchPokemonImage(name) {
   }
 }
 
+// A cadeia evolutiva da PokéAPI é uma árvore; este bloco transforma tudo em lista.
 function flattenEvolutionChain(chain, depth = 0) {
   return [
     {
@@ -546,6 +877,7 @@ async function getEvolutionCards(pokemonData) {
   }
 }
 
+// Busca principal: atualiza o card, fraquezas e evoluções do Pokémon escolhido.
 async function searchPokemon() {
   const pokemonName = normalizePokemonSearchTerm(searchInput.value);
 
@@ -569,20 +901,37 @@ async function searchPokemon() {
 
     const pokemon = {
       name: formatApiName(data.name),
+      apiName: data.name,
       id: data.id,
       image: data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "icon.svg",
       types: defenseTypes.map((type) => typeNames[type]),
-      abilities: data.abilities.map((item) => formatApiName(item.ability.name))
+      typeIds: defenseTypes,
+      abilities: data.abilities.map((item) => formatApiName(item.ability.name)),
+      baseStats: formatBaseStats(data.stats)
     };
+
+    currentPokemon = {
+      name: pokemon.name,
+      apiName: pokemon.apiName,
+      id: pokemon.id,
+      image: pokemon.image,
+      types: pokemon.types,
+      typeIds: pokemon.typeIds,
+      abilities: pokemon.abilities,
+      baseStats: pokemon.baseStats
+    };
+    currentPokemonMoveEntries = data.moves;
+    naturalMoves = [];
+    naturalMovesVisible = false;
+    naturalMovesExpanded = false;
+    naturalMovesLoadedFor = null;
 
     const groups = calculateWeaknesses(defenseTypes);
     const evolutions = await getEvolutionCards(data);
+    currentEvolutionCards = evolutions;
 
     renderPokemonResult(pokemon, groups);
-
-    if (evolutions.length) {
-      renderEvolutionSection(evolutions);
-    }
+    renderTeamPanel();
   } catch (error) {
     if (error.message === "pokemon-not-found") {
       renderError("Pokémon nao encontrado. Confira o nome e tente novamente.");
@@ -594,6 +943,309 @@ async function searchPokemon() {
     searchButton.disabled = false;
     searchButton.textContent = "Buscar Pokémon";
   }
+}
+
+// Meu Time: seis slots de time persistidos no navegador.
+function createDefaultTeams() {
+  return Array.from({ length: MAX_TEAMS }, (_, index) => ({
+    name: `Time ${index + 1}`,
+    pokemon: []
+  }));
+}
+
+function loadTeams() {
+  try {
+    const savedTeams = JSON.parse(localStorage.getItem(TEAMS_STORAGE_KEY));
+
+    if (Array.isArray(savedTeams)) {
+      teams = createDefaultTeams().map((team, index) => ({
+        ...team,
+        ...(savedTeams[index] || {}),
+        pokemon: Array.isArray(savedTeams[index]?.pokemon)
+          ? savedTeams[index].pokemon.slice(0, MAX_TEAM_SIZE)
+          : []
+      }));
+    }
+
+    const savedActiveTeam = Number(localStorage.getItem(ACTIVE_TEAM_STORAGE_KEY));
+
+    if (Number.isInteger(savedActiveTeam) && savedActiveTeam >= 0 && savedActiveTeam < MAX_TEAMS) {
+      activeTeamIndex = savedActiveTeam;
+    }
+  } catch (error) {
+    teams = createDefaultTeams();
+    activeTeamIndex = 0;
+  }
+}
+
+function saveTeams() {
+  localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(teams));
+  localStorage.setItem(ACTIVE_TEAM_STORAGE_KEY, String(activeTeamIndex));
+}
+
+function getActiveTeam() {
+  return teams[activeTeamIndex];
+}
+
+function openTeamPanel() {
+  teamPanel.classList.add("is-open");
+  teamPanel.setAttribute("aria-hidden", "false");
+  renderTeamPanel();
+}
+
+function closeTeamPanel() {
+  teamPanel.classList.remove("is-open");
+  teamPanel.setAttribute("aria-hidden", "true");
+}
+
+function renderTeamPanel() {
+  renderTeamTabs();
+  renderTeamName();
+  renderTeamPokemon();
+  renderTeamAnalysis();
+  teamAddCurrentButton.disabled = !currentPokemon || getActiveTeam().pokemon.length >= MAX_TEAM_SIZE;
+}
+
+function setTeamMessage(message, isError = true) {
+  teamMessage.textContent = message;
+  teamMessage.classList.toggle("is-success", !isError);
+}
+
+function renderTeamTabs() {
+  teamTabs.innerHTML = "";
+
+  teams.forEach((team, index) => {
+    const button = document.createElement("button");
+    button.className = `team-tab${index === activeTeamIndex ? " is-active" : ""}`;
+    button.type = "button";
+    button.textContent = team.name || `Time ${index + 1}`;
+
+    button.addEventListener("click", () => {
+      activeTeamIndex = index;
+      saveTeams();
+      renderTeamPanel();
+    });
+
+    teamTabs.append(button);
+  });
+}
+
+function renderTeamName() {
+  teamNameInput.value = getActiveTeam().name;
+}
+
+function renderTeamPokemon() {
+  const activeTeam = getActiveTeam();
+  teamPokemonList.innerHTML = "";
+
+  if (!activeTeam.pokemon.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty-message";
+    empty.textContent = "Nenhum Pokémon neste time.";
+    teamPokemonList.append(empty);
+    return;
+  }
+
+  activeTeam.pokemon.forEach((pokemon, index) => {
+    const card = document.createElement("article");
+    card.className = "team-pokemon-card";
+
+    const image = document.createElement("img");
+    image.src = pokemon.image;
+    image.alt = `Sprite de ${pokemon.name}`;
+
+    const content = document.createElement("div");
+
+    const title = document.createElement("h4");
+    title.textContent = `${pokemon.name} ${formatDexNumber(pokemon.id)}`;
+
+    const types = document.createElement("p");
+    types.textContent = pokemon.types.join(" / ");
+
+    const removeButton = document.createElement("button");
+    removeButton.className = "team-remove-button";
+    removeButton.type = "button";
+    removeButton.textContent = "Remover";
+    removeButton.addEventListener("click", () => {
+      activeTeam.pokemon.splice(index, 1);
+      saveTeams();
+      renderTeamPanel();
+    });
+
+    content.append(title, types, removeButton);
+    card.append(image, content);
+    teamPokemonList.append(card);
+  });
+}
+
+function addCurrentPokemonToTeam() {
+  if (!currentPokemon) {
+    setTeamMessage("Busque um Pokémon primeiro ou use a busca do Meu Time.");
+    return;
+  }
+
+  addPokemonObjectToActiveTeam(currentPokemon);
+}
+
+function addPokemonObjectToActiveTeam(pokemon) {
+  const activeTeam = getActiveTeam();
+
+  if (activeTeam.pokemon.length >= MAX_TEAM_SIZE) {
+    setTeamMessage("Este time já tem 6 Pokémon.");
+    return false;
+  }
+
+  if (activeTeam.pokemon.some((teamPokemon) => teamPokemon.id === pokemon.id)) {
+    setTeamMessage(`${pokemon.name} já está neste time.`);
+    return false;
+  }
+
+  activeTeam.pokemon.push({ ...pokemon });
+  saveTeams();
+  renderTeamPanel();
+  setTeamMessage(`${pokemon.name} foi adicionado ao time.`, false);
+  return true;
+}
+
+function createTeamPokemonFromData(data) {
+  const typeIds = data.types
+    .sort((first, second) => first.slot - second.slot)
+    .map((item) => item.type.name);
+
+  return {
+    name: formatApiName(data.name),
+    apiName: data.name,
+    id: data.id,
+    image: data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "icon.svg",
+    types: typeIds.map((type) => typeNames[type]),
+    typeIds
+  };
+}
+
+async function addPokemonToActiveTeam(searchValue) {
+  const activeTeam = getActiveTeam();
+  const pokemonName = normalizePokemonSearchTerm(searchValue || teamPokemonSearchInput.value);
+
+  if (!pokemonName) {
+    setTeamMessage("Digite o nome ou número de um Pokémon.");
+    return;
+  }
+
+  if (activeTeam.pokemon.length >= MAX_TEAM_SIZE) {
+    setTeamMessage("Este time já tem 6 Pokémon.");
+    return;
+  }
+
+  setTeamMessage("Buscando Pokémon...", false);
+
+  try {
+    const data = await fetchPokemon(pokemonName);
+    const added = addPokemonObjectToActiveTeam(createTeamPokemonFromData(data));
+
+    if (added) {
+      teamPokemonSearchInput.value = "";
+      hideTeamSuggestions();
+    }
+  } catch (error) {
+    setTeamMessage("Pokémon não encontrado. Confira o nome ou número.");
+  }
+}
+
+function clearActiveTeam() {
+  getActiveTeam().pokemon = [];
+  saveTeams();
+  renderTeamPanel();
+  setTeamMessage("Time limpo.", false);
+}
+
+// Análise defensiva e ofensiva do time usando só a tabela de tipos.
+function createAnalysisCard(titleText, lines) {
+  const card = document.createElement("article");
+  card.className = "analysis-card";
+
+  const title = document.createElement("strong");
+  title.textContent = titleText;
+
+  card.append(title);
+
+  lines.forEach((line) => {
+    const text = document.createElement("span");
+    text.textContent = line;
+    card.append(text);
+  });
+
+  return card;
+}
+
+function renderTeamAnalysis() {
+  const pokemon = getActiveTeam().pokemon;
+  teamDefenseAnalysis.innerHTML = "";
+  teamOffenseAnalysis.innerHTML = "";
+
+  if (!pokemon.length) {
+    teamDefenseAnalysis.append(createAnalysisCard("Sem dados", ["Adicione Pokémon para analisar o time."]));
+    teamOffenseAnalysis.append(createAnalysisCard("Sem dados", ["Adicione Pokémon para analisar a cobertura."]));
+    return;
+  }
+
+  renderTeamDefenseAnalysis(pokemon);
+  renderTeamOffenseAnalysis(pokemon);
+}
+
+function renderTeamDefenseAnalysis(teamPokemon) {
+  const analysis = allTypes
+    .map((attackType) => {
+      const counts = teamPokemon.reduce((total, pokemon) => {
+        const multiplier = pokemon.typeIds.reduce((value, defenseType) => {
+          return value * getAttackMultiplier(attackType, defenseType);
+        }, 1);
+
+        if (multiplier === 0) {
+          total.immune += 1;
+        } else if (multiplier > 1) {
+          total.weak += 1;
+        } else if (multiplier < 1) {
+          total.resist += 1;
+        }
+
+        return total;
+      }, { weak: 0, resist: 0, immune: 0 });
+
+      return { attackType, ...counts };
+    })
+    .sort((first, second) => {
+      return second.weak - first.weak || first.resist - second.resist || first.immune - second.immune;
+    });
+
+  analysis.forEach((item) => {
+    teamDefenseAnalysis.append(createAnalysisCard(typeNames[item.attackType], [
+      `${item.weak} fracos`,
+      `${item.resist} resistem`,
+      `${item.immune} imunes`
+    ]));
+  });
+}
+
+function renderTeamOffenseAnalysis(teamPokemon) {
+  const attackingTypes = [...new Set(teamPokemon.flatMap((pokemon) => pokemon.typeIds))];
+  const analysis = allTypes.map((defenseType) => {
+    const bestMultiplier = attackingTypes.reduce((best, attackType) => {
+      return Math.max(best, getAttackMultiplier(attackType, defenseType));
+    }, 0);
+
+    return { defenseType, bestMultiplier };
+  });
+
+  const covered = analysis.filter((item) => item.bestMultiplier > 1);
+  const poor = analysis.filter((item) => item.bestMultiplier <= 1);
+
+  teamOffenseAnalysis.append(createAnalysisCard("Bate super efetivo em", [
+    covered.length ? covered.map((item) => typeNames[item.defenseType]).join(", ") : "Nenhum tipo"
+  ]));
+
+  teamOffenseAnalysis.append(createAnalysisCard("Cobre mal", [
+    poor.length ? poor.map((item) => typeNames[item.defenseType]).join(", ") : "Nenhum tipo"
+  ]));
 }
 
 calculateButton.addEventListener("click", () => {
@@ -620,6 +1272,8 @@ searchButton.addEventListener("click", searchPokemon);
 
 searchInput.addEventListener("input", renderSuggestions);
 
+teamPokemonSearchInput.addEventListener("input", renderTeamSuggestions);
+
 searchInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     hideSuggestions();
@@ -627,10 +1281,40 @@ searchInput.addEventListener("keydown", (event) => {
   }
 });
 
+teamPokemonSearchInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    hideTeamSuggestions();
+    addPokemonToActiveTeam();
+  }
+});
+
+teamOpenButton.addEventListener("click", openTeamPanel);
+teamCloseButton.addEventListener("click", closeTeamPanel);
+teamAddCurrentButton.addEventListener("click", addCurrentPokemonToTeam);
+teamClearButton.addEventListener("click", clearActiveTeam);
+
+teamNameInput.addEventListener("input", () => {
+  getActiveTeam().name = teamNameInput.value.trim() || `Time ${activeTeamIndex + 1}`;
+  saveTeams();
+  renderTeamTabs();
+});
+
+teamPanel.addEventListener("click", (event) => {
+  if (event.target === teamPanel) {
+    closeTeamPanel();
+  }
+});
+
 document.addEventListener("click", (event) => {
   if (!event.target.closest(".search-field")) {
     hideSuggestions();
   }
+
+  if (!event.target.closest(".team-search-field")) {
+    hideTeamSuggestions();
+  }
 });
 
+loadTeams();
+renderTeamPanel();
 loadPokemonList();

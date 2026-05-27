@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <button id="team-open-button" class="team-open-button" type="button">Meu Time</button>
+
   <main class="container">
     <h1>PokéWeakness</h1>
 
@@ -75,10 +77,53 @@
       </div>
 
       <button id="calculate-button" type="button">Calcular</button>
+      <button id="show-type-pokemon-button" class="secondary-button" type="button">Mostrar Pokémon com essa tipagem</button>
     </section>
 
     <section id="result" class="result" aria-live="polite"></section>
   </main>
+
+  <aside id="team-panel" class="team-panel" aria-label="Meu Time" aria-hidden="true">
+    <div class="team-panel-content">
+      <div class="team-panel-header">
+        <h2>Meu Time</h2>
+        <button id="team-close-button" class="icon-text-button" type="button">Fechar</button>
+      </div>
+
+      <div id="team-tabs" class="team-tabs" aria-label="Times salvos"></div>
+
+      <label class="team-name-field" for="team-name-input">Nome do time</label>
+      <input id="team-name-input" type="text" maxlength="32">
+
+      <div class="team-search-field">
+        <label for="team-pokemon-search">Adicionar Pokémon ao time</label>
+        <input id="team-pokemon-search" type="search" placeholder="Nome, # ou número">
+        <div id="team-pokemon-suggestions" class="suggestions" role="listbox"></div>
+        <p id="team-message" class="team-message" aria-live="polite"></p>
+      </div>
+
+      <div class="team-actions">
+        <button id="team-add-current-button" type="button">Adicionar Pokémon atual</button>
+        <button id="team-clear-button" class="danger-button" type="button">Limpar time</button>
+      </div>
+
+      <section>
+        <h3>Pokémon do Time</h3>
+        <div id="team-pokemon-list" class="team-pokemon-list"></div>
+      </section>
+
+      <section>
+        <h3>Fraquezas do Time</h3>
+        <div id="team-defense-analysis" class="team-analysis"></div>
+      </section>
+
+      <section>
+        <h3>Cobertura do Time</h3>
+        <p class="analysis-note">Análise simples baseada apenas nos tipos dos Pokémon, não nos ataques.</p>
+        <div id="team-offense-analysis" class="team-analysis"></div>
+      </section>
+    </div>
+  </aside>
 
   <script src="script.js"></script>
   <script>

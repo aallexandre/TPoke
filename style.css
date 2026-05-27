@@ -82,9 +82,31 @@ button:hover {
   background: #ffd84a;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.team-open-button {
+  position: fixed;
+  z-index: 30;
+  top: 16px;
+  right: 16px;
+  width: auto;
+  min-width: 116px;
+  padding: 0 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
 .search-field {
   grid-column: 1 / -1;
   position: relative;
+  text-align: left;
+}
+
+.team-search-field {
+  position: relative;
+  margin-top: 14px;
   text-align: left;
 }
 
@@ -168,6 +190,15 @@ button:hover {
   background: #93c5fd;
 }
 
+.danger-button {
+  color: #f5f7fb;
+  background: #b91c1c;
+}
+
+.danger-button:hover {
+  background: #dc2626;
+}
+
 .result {
   min-height: 96px;
   margin-top: 20px;
@@ -215,6 +246,109 @@ button:hover {
   margin: 6px 0;
   line-height: 1.45;
   color: #d9e2f1;
+}
+
+.base-stats {
+  margin-top: 14px;
+  padding: 12px;
+  background: #181d26;
+  border: 1px solid #3a4557;
+  border-radius: 8px;
+}
+
+.base-stats h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: #ffcb05;
+}
+
+.base-stats-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+
+.base-stats-list p {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+}
+
+.base-stats-list span {
+  color: #d9e2f1;
+}
+
+.base-stats-list strong {
+  color: #f5f7fb;
+}
+
+.base-stats-total {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px solid #3a4557;
+}
+
+.moves-toggle-button {
+  width: auto;
+  min-width: 190px;
+  margin-top: 12px;
+  padding: 0 14px;
+}
+
+.moves-section {
+  grid-column: 1 / -1;
+  padding: 16px;
+  background: #202735;
+  border: 1px solid #344052;
+  border-radius: 8px;
+}
+
+.moves-section h2 {
+  margin: 0 0 14px;
+  font-size: 1.25rem;
+  color: #ffcb05;
+}
+
+.moves-loading {
+  margin: 0;
+  color: #d9e2f1;
+}
+
+.moves-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.move-card {
+  padding: 12px;
+  text-align: left;
+  background: #181d26;
+  border: 1px solid #3a4557;
+  border-radius: 8px;
+}
+
+.move-card strong {
+  display: block;
+  color: #f5f7fb;
+}
+
+.move-card span {
+  display: block;
+  margin: 5px 0;
+  font-weight: 700;
+  color: #93c5fd;
+}
+
+.move-card p {
+  margin: 0;
+  color: #d9e2f1;
+  line-height: 1.45;
+}
+
+.moves-more-button {
+  margin-top: 12px;
 }
 
 .evolution-section {
@@ -279,6 +413,174 @@ button:hover {
   color: #172033;
 }
 
+.team-panel {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  display: none;
+  padding: 18px;
+  overflow-y: auto;
+  background: rgba(5, 8, 13, 0.82);
+}
+
+.team-panel.is-open {
+  display: block;
+}
+
+.team-panel-content {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  padding: 20px;
+  color: #f5f7fb;
+  background: #181d26;
+  border: 1px solid #344052;
+  border-radius: 8px;
+}
+
+.team-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.team-panel-header h2,
+.team-panel h3 {
+  margin: 0;
+  color: #ffcb05;
+}
+
+.team-panel h3 {
+  margin-top: 22px;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.icon-text-button {
+  width: auto;
+  min-width: 92px;
+  padding: 0 14px;
+}
+
+.team-tabs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.team-tab {
+  min-height: 48px;
+  padding: 0 8px;
+  color: #f5f7fb;
+  background: #242b38;
+  border: 1px solid #3a4557;
+}
+
+.team-tab.is-active {
+  color: #172033;
+  background: #ffcb05;
+}
+
+.team-name-field {
+  margin-top: 8px;
+  text-align: left;
+}
+
+.team-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.team-message {
+  min-height: 22px;
+  margin: 8px 0 0;
+  color: #fca5a5;
+  line-height: 1.4;
+}
+
+.team-message.is-success {
+  color: #86efac;
+}
+
+.team-pokemon-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.team-pokemon-card {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  text-align: left;
+  background: #202735;
+  border: 1px solid #344052;
+  border-radius: 8px;
+}
+
+.team-pokemon-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.team-pokemon-card h4 {
+  margin: 0 0 4px;
+  color: #f5f7fb;
+}
+
+.team-pokemon-card p {
+  margin: 4px 0;
+  color: #d9e2f1;
+  line-height: 1.35;
+}
+
+.team-remove-button {
+  min-height: 42px;
+  margin-top: 8px;
+  color: #f5f7fb;
+  background: #b91c1c;
+}
+
+.team-analysis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.analysis-card {
+  padding: 12px;
+  text-align: left;
+  background: #202735;
+  border: 1px solid #344052;
+  border-radius: 8px;
+}
+
+.analysis-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffcb05;
+}
+
+.analysis-card span {
+  display: block;
+  color: #d9e2f1;
+  line-height: 1.4;
+}
+
+.analysis-note,
+.empty-message {
+  margin: 0 0 12px;
+  color: #b9c4d8;
+  line-height: 1.45;
+}
+
 .result-card {
   min-height: 92px;
   padding: 14px;
@@ -307,6 +609,15 @@ button:hover {
 
   .container {
     width: min(100% - 24px, 720px);
+  }
+
+  .team-open-button {
+    top: 10px;
+    right: 10px;
+    min-height: 48px;
+    min-width: 104px;
+    padding: 0 12px;
+    font-size: 0.95rem;
   }
 
   h1 {
@@ -343,6 +654,23 @@ button:hover {
     text-align: center;
   }
 
+  .moves-toggle-button {
+    width: 100%;
+  }
+
+  .base-stats {
+    width: 100%;
+    text-align: left;
+  }
+
+  .base-stats-list {
+    grid-template-columns: 1fr;
+  }
+
+  .moves-list {
+    grid-template-columns: 1fr;
+  }
+
   .evolution-list {
     grid-template-columns: 1fr;
   }
@@ -352,5 +680,42 @@ button:hover {
     flex-direction: row;
     justify-content: flex-start;
     text-align: left;
+  }
+
+  .team-panel {
+    padding: 0;
+  }
+
+  .team-panel-content {
+    min-height: 100vh;
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .team-panel-header {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    padding-bottom: 12px;
+    background: #181d26;
+  }
+
+  .team-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .team-actions,
+  .team-pokemon-list,
+  .team-analysis {
+    grid-template-columns: 1fr;
+  }
+
+  .team-pokemon-card {
+    grid-template-columns: 82px 1fr;
+  }
+
+  .team-pokemon-card img {
+    width: 82px;
+    height: 82px;
   }
 }
