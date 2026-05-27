@@ -1,0 +1,19 @@
+{
+  "name": "PokéWeakness",
+  "short_name": "PokeWeak",
+  "description": "Calculadora simples de fraquezas Pokemon.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101318",
+  "theme_color": "#101318",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

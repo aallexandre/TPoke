@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101318">
+  <meta name="description" content="Calculadora simples de fraquezas Pokemon.">
+  <title>PokéWeakness</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>PokéWeakness</h1>
+
+    <section class="calculator" aria-label="Calculadora de fraqueza Pokemon">
+      <div class="field">
+        <label for="type-one">Tipo 1</label>
+        <select id="type-one">
+          <option value="">Escolha um tipo</option>
+          <option value="normal">Normal</option>
+          <option value="fire">Fogo</option>
+          <option value="water">Agua</option>
+          <option value="grass">Grama</option>
+          <option value="electric">Eletrico</option>
+          <option value="ice">Gelo</option>
+          <option value="fighting">Lutador</option>
+          <option value="poison">Venenoso</option>
+          <option value="ground">Terra</option>
+          <option value="flying">Voador</option>
+          <option value="psychic">Psiquico</option>
+          <option value="bug">Inseto</option>
+          <option value="rock">Pedra</option>
+          <option value="ghost">Fantasma</option>
+          <option value="dragon">Dragao</option>
+          <option value="dark">Sombrio</option>
+          <option value="steel">Aco</option>
+          <option value="fairy">Fada</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="type-two">Tipo 2</label>
+        <select id="type-two">
+          <option value="">Nenhum</option>
+          <option value="normal">Normal</option>
+          <option value="fire">Fogo</option>
+          <option value="water">Agua</option>
+          <option value="grass">Grama</option>
+          <option value="electric">Eletrico</option>
+          <option value="ice">Gelo</option>
+          <option value="fighting">Lutador</option>
+          <option value="poison">Venenoso</option>
+          <option value="ground">Terra</option>
+          <option value="flying">Voador</option>
+          <option value="psychic">Psiquico</option>
+          <option value="bug">Inseto</option>
+          <option value="rock">Pedra</option>
+          <option value="ghost">Fantasma</option>
+          <option value="dragon">Dragao</option>
+          <option value="dark">Sombrio</option>
+          <option value="steel">Aco</option>
+          <option value="fairy">Fada</option>
+        </select>
+      </div>
+
+      <button id="calculate-button" type="button">Calcular</button>
+    </section>
+
+    <section id="result" class="result" aria-live="polite"></section>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js");
+      });
+    }
+  </script>
+</body>
+</html>
