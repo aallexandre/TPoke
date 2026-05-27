@@ -57,7 +57,8 @@ let naturalMoves = [];
 let naturalMovesVisible = false;
 let naturalMovesExpanded = false;
 let naturalMovesLoadedFor = null;
-let currentEvolutionCards = [];
+let currentEvolutionCards = null;
+let currentOtherForms = [];
 let activeTeamIndex = 0;
 let teams = createDefaultTeams();
 
@@ -483,11 +484,12 @@ function renderPokemonResult(pokemon, groups) {
     renderNaturalMovesSection();
   }
 
-  if (currentEvolutionCards.length) {
+  if (currentEvolutionCards) {
     renderEvolutionSection(currentEvolutionCards);
   }
 
   renderWeaknessCards(groups);
+  renderOtherFormsSection(currentOtherForms);
 }
 
 function getVersionGroupRank(versionGroupName) {
@@ -721,6 +723,80 @@ function renderNaturalMovesSection(loadingMessage = "") {
   pokemonCard.after(section);
 }
 
+function createEvolutionPokemonCard(evolution) {
+  const button = document.createElement("button");
+  button.className = `evolution-card${evolution.isCurrent ? " is-current" : ""}`;
+  button.type = "button";
+
+  const image = document.createElement("img");
+  image.src = evolution.image;
+  image.alt = `Sprite de ${evolution.displayName}`;
+
+  const label = document.createElement("span");
+  label.className = "evolution-stage";
+  label.textContent = evolution.isCurrent ? "Atual" : "Evolução";
+
+  const name = document.createElement("strong");
+  name.textContent = evolution.displayName;
+
+  button.append(image, label, name);
+  button.addEventListener("click", () => {
+    searchInput.value = evolution.name;
+    hideSuggestions();
+    searchPokemon();
+  });
+
+  return button;
+}
+
+function createEvolutionMethod(methods) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "evolution-method";
+
+  const arrowTop = document.createElement("span");
+  arrowTop.className = "evolution-arrow";
+  arrowTop.textContent = "↓";
+
+  const badges = document.createElement("div");
+  badges.className = "evolution-badges";
+
+  methods.forEach((method) => {
+    const badge = document.createElement("span");
+    badge.className = "evolution-badge";
+    badge.textContent = method;
+    badges.append(badge);
+  });
+
+  const arrowBottom = document.createElement("span");
+  arrowBottom.className = "evolution-arrow";
+  arrowBottom.textContent = "↓";
+
+  wrapper.append(arrowTop, badges, arrowBottom);
+  return wrapper;
+}
+
+function createEvolutionBranch(evolution) {
+  const branch = document.createElement("div");
+  branch.className = "evolution-branch";
+  branch.append(createEvolutionPokemonCard(evolution));
+
+  if (evolution.children.length) {
+    const children = document.createElement("div");
+    children.className = "evolution-children";
+
+    evolution.children.forEach((child) => {
+      const path = document.createElement("div");
+      path.className = "evolution-path";
+      path.append(createEvolutionMethod(child.methods), createEvolutionBranch(child));
+      children.append(path);
+    });
+
+    branch.append(children);
+  }
+
+  return branch;
+}
+
 function renderEvolutionSection(evolutions) {
   const section = document.createElement("section");
   section.className = "evolution-section";
@@ -728,36 +804,20 @@ function renderEvolutionSection(evolutions) {
   const title = document.createElement("h2");
   title.textContent = "Evoluções";
 
-  const list = document.createElement("div");
-  list.className = "evolution-list";
+  if (!evolutions || !evolutions.hasEvolution) {
+    const message = document.createElement("p");
+    message.className = "evolution-empty";
+    message.textContent = "Este Pokémon não possui evolução.";
+    section.append(title, message);
+    resultArea.append(section);
+    return;
+  }
 
-  evolutions.forEach((evolution) => {
-    const button = document.createElement("button");
-    button.className = "evolution-card";
-    button.type = "button";
+  const tree = document.createElement("div");
+  tree.className = "evolution-tree";
+  tree.append(createEvolutionBranch(evolutions.root));
 
-    const image = document.createElement("img");
-    image.src = evolution.image;
-    image.alt = `Sprite de ${evolution.displayName}`;
-
-    const label = document.createElement("span");
-    label.className = "evolution-stage";
-    label.textContent = evolution.stage;
-
-    const name = document.createElement("strong");
-    name.textContent = evolution.displayName;
-
-    button.append(image, label, name);
-    button.addEventListener("click", () => {
-      searchInput.value = evolution.name;
-      hideSuggestions();
-      searchPokemon();
-    });
-
-    list.append(button);
-  });
-
-  section.append(title, list);
+  section.append(title, tree);
   resultArea.append(section);
 }
 
@@ -814,34 +874,260 @@ async function fetchPokemonImage(name) {
   }
 }
 
-// A cadeia evolutiva da PokéAPI é uma árvore; este bloco transforma tudo em lista.
-function flattenEvolutionChain(chain, depth = 0) {
-  return [
-    {
-      name: chain.species.name,
-      depth
-    },
-    ...chain.evolves_to.flatMap((evolution) => flattenEvolutionChain(evolution, depth + 1))
-  ];
+async function fetchPokemonByType(typeId) {
+  const response = await fetch(`https://pokeapi.co/api/v2/type/${encodeURIComponent(typeId)}`);
+
+  if (!response.ok) {
+    throw new Error("type-load-failed");
+  }
+
+  const data = await response.json();
+  return data.pokemon.map((entry) => entry.pokemon.name);
 }
 
-function getEvolutionStage(evolution, currentEvolution) {
-  if (evolution.name === currentEvolution.name) {
-    return "Atual";
+function createTypeMatchCard(pokemon) {
+  const button = document.createElement("button");
+  button.className = "type-match-card";
+  button.type = "button";
+
+  const image = document.createElement("img");
+  image.src = pokemon.image;
+  image.alt = `Sprite de ${pokemon.name}`;
+
+  const content = document.createElement("div");
+
+  const title = document.createElement("strong");
+  title.textContent = `${pokemon.name} ${formatDexNumber(pokemon.id)}`;
+
+  const types = document.createElement("span");
+  types.textContent = pokemon.types.join(" / ");
+
+  content.append(title, types);
+  button.append(image, content);
+
+  button.addEventListener("click", () => {
+    searchInput.value = pokemon.apiName;
+    searchPokemon();
+  });
+
+  return button;
+}
+
+function renderTypeMatches(pokemonListByType, defenseTypes) {
+  resultArea.innerHTML = "";
+
+  const section = document.createElement("section");
+  section.className = "type-match-section";
+
+  const title = document.createElement("h2");
+  title.textContent = "Pokémon com essa tipagem";
+
+  const description = document.createElement("p");
+  description.textContent = `Tipos selecionados: ${defenseTypes.map((type) => typeNames[type]).join(" / ")}`;
+
+  const list = document.createElement("div");
+  list.className = "type-match-list";
+
+  pokemonListByType.forEach((pokemon) => {
+    list.append(createTypeMatchCard(pokemon));
+  });
+
+  section.append(title, description, list);
+  resultArea.append(section);
+}
+
+async function showPokemonWithSelectedTypes() {
+  const typeOne = typeOneSelect.value;
+  const typeTwo = typeTwoSelect.value;
+
+  if (!typeOne) {
+    renderError("Escolha pelo menos o Tipo 1 para listar Pokémon.");
+    return;
   }
 
-  if (evolution.depth < currentEvolution.depth) {
-    return "Anterior";
+  if (typeOne === typeTwo) {
+    renderError("Escolha tipos diferentes ou deixe o Tipo 2 como Nenhum.");
+    return;
   }
 
-  if (evolution.depth > currentEvolution.depth) {
-    return "Próxima";
+  const defenseTypes = typeTwo ? [typeOne, typeTwo] : [typeOne];
+  renderLoading("Carregando", "Buscando Pokémon com essa tipagem...");
+
+  try {
+    const typeLists = await Promise.all(defenseTypes.map(fetchPokemonByType));
+    const matchingNames = typeLists
+      .reduce((matches, names) => matches.filter((name) => names.includes(name)))
+      .slice(0, TYPE_MATCH_LIMIT);
+
+    if (!matchingNames.length) {
+      renderError("Nenhum Pokémon encontrado com essa tipagem.");
+      return;
+    }
+
+    const pokemonDetails = await Promise.all(
+      matchingNames.map(async (name) => createTeamPokemonFromData(await fetchPokemon(name)))
+    );
+
+    pokemonDetails.sort((first, second) => first.id - second.id);
+    renderTypeMatches(pokemonDetails, defenseTypes);
+  } catch (error) {
+    renderError("Não foi possível carregar essa lista agora. Tente novamente.");
+  }
+}
+
+function formatEvolutionName(entity) {
+  return entity ? formatApiName(entity.name) : "";
+}
+
+function formatTimeOfDay(timeOfDay) {
+  const times = {
+    day: "durante o dia",
+    night: "durante a noite"
+  };
+
+  return times[timeOfDay] || `durante ${formatApiName(timeOfDay)}`;
+}
+
+function formatEvolutionMethods(details) {
+  const detail = details[0] || {};
+  const methods = [];
+
+  if (detail.min_level) {
+    methods.push(`Evolui no nível ${detail.min_level}`);
   }
 
-  return "Alternativa";
+  if (detail.item) {
+    methods.push(`Usar ${formatEvolutionName(detail.item)}`);
+  }
+
+  if (detail.trigger?.name === "trade") {
+    methods.push("Evolui por troca");
+  }
+
+  if (detail.held_item) {
+    methods.push(`Trocar segurando ${formatEvolutionName(detail.held_item)}`);
+  }
+
+  if (detail.known_move) {
+    methods.push(`Subir de nível sabendo ${formatEvolutionName(detail.known_move)}`);
+  }
+
+  if (detail.known_move_type) {
+    methods.push(`Subir de nível sabendo golpe do tipo ${formatEvolutionName(detail.known_move_type)}`);
+  }
+
+  if (detail.min_happiness) {
+    methods.push("Evolui com amizade alta");
+  }
+
+  if (detail.min_beauty) {
+    methods.push("Evolui com beleza alta");
+  }
+
+  if (detail.min_affection) {
+    methods.push("Evolui com afeição alta");
+  }
+
+  if (detail.time_of_day) {
+    methods.push(formatTimeOfDay(detail.time_of_day));
+  }
+
+  if (detail.location) {
+    methods.push(`Evolui em ${formatEvolutionName(detail.location)}`);
+  }
+
+  if (detail.gender === 1) {
+    methods.push("somente fêmea");
+  } else if (detail.gender === 2) {
+    methods.push("somente macho");
+  }
+
+  if (detail.party_species) {
+    methods.push(`com ${formatEvolutionName(detail.party_species)} no time`);
+  }
+
+  if (detail.party_type) {
+    methods.push(`com Pokémon do tipo ${formatEvolutionName(detail.party_type)} no time`);
+  }
+
+  if (detail.trade_species) {
+    methods.push(`trocar por ${formatEvolutionName(detail.trade_species)}`);
+  }
+
+  if (detail.needs_overworld_rain) {
+    methods.push("durante chuva no mapa");
+  }
+
+  if (detail.turn_upside_down) {
+    methods.push("virando o console de cabeça para baixo");
+  }
+
+  return methods.length ? methods : ["Método especial"];
+}
+
+async function createEvolutionNode(chain, currentSpeciesName, evolutionDetails = []) {
+  return {
+    name: chain.species.name,
+    displayName: formatApiName(chain.species.name),
+    image: await fetchPokemonImage(chain.species.name),
+    isCurrent: chain.species.name === currentSpeciesName,
+    methods: formatEvolutionMethods(evolutionDetails),
+    children: await Promise.all(
+      chain.evolves_to.map((evolution) => {
+        return createEvolutionNode(evolution, currentSpeciesName, evolution.evolution_details);
+      })
+    )
+  };
 }
 
 async function getEvolutionCards(pokemonData) {
+  try {
+    const speciesResponse = await fetch(pokemonData.species.url);
+
+    if (!speciesResponse.ok) {
+      return null;
+    }
+
+    const speciesData = await speciesResponse.json();
+    const evolutionResponse = await fetch(speciesData.evolution_chain.url);
+
+    if (!evolutionResponse.ok) {
+      return null;
+    }
+
+    const evolutionData = await evolutionResponse.json();
+    const root = await createEvolutionNode(evolutionData.chain, speciesData.name);
+
+    return {
+      root,
+      hasEvolution: root.children.length > 0
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function getFormCategory(formName) {
+  if (formName.includes("mega")) {
+    return 1;
+  }
+
+  if (formName.includes("gmax") || formName.includes("gigantamax")) {
+    return 2;
+  }
+
+  if (["alola", "galar", "hisui", "paldea"].some((keyword) => formName.includes(keyword))) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getPokemonImage(data) {
+  return data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "";
+}
+
+async function getOtherForms(pokemonData) {
   try {
     const speciesResponse = await fetch(pokemonData.species.url);
 
@@ -850,31 +1136,91 @@ async function getEvolutionCards(pokemonData) {
     }
 
     const speciesData = await speciesResponse.json();
-    const evolutionResponse = await fetch(speciesData.evolution_chain.url);
+    const forms = await Promise.all(
+      speciesData.varieties.map(async (variety) => {
+        const response = await fetch(variety.pokemon.url);
 
-    if (!evolutionResponse.ok) {
-      return [];
-    }
+        if (!response.ok) {
+          return null;
+        }
 
-    const evolutionData = await evolutionResponse.json();
-    const evolutionNames = flattenEvolutionChain(evolutionData.chain);
-    const currentEvolution = evolutionNames.find((evolution) => evolution.name === speciesData.name);
+        const data = await response.json();
+        const image = getPokemonImage(data);
 
-    if (!currentEvolution) {
-      return [];
-    }
+        if (!image || data.name === pokemonData.name) {
+          return null;
+        }
 
-    return Promise.all(
-      evolutionNames.map(async (evolution) => ({
-        ...evolution,
-        stage: getEvolutionStage(evolution, currentEvolution),
-        displayName: formatApiName(evolution.name),
-        image: await fetchPokemonImage(evolution.name)
-      }))
+        const typeIds = data.types
+          .sort((first, second) => first.slot - second.slot)
+          .map((item) => item.type.name);
+
+        return {
+          apiName: data.name,
+          name: formatApiName(data.name),
+          id: data.id,
+          image,
+          types: typeIds.map((type) => typeNames[type]),
+          category: getFormCategory(data.name)
+        };
+      })
     );
+
+    return forms
+      .filter(Boolean)
+      .sort((first, second) => first.category - second.category || first.id - second.id || first.name.localeCompare(second.name));
   } catch (error) {
     return [];
   }
+}
+
+function renderOtherFormsSection(forms) {
+  const section = document.createElement("section");
+  section.className = "other-forms-section";
+
+  const title = document.createElement("h2");
+  title.textContent = "Outras Formas";
+  section.append(title);
+
+  if (!forms.length) {
+    const message = document.createElement("p");
+    message.className = "other-forms-empty";
+    message.textContent = "Nenhuma outra forma encontrada.";
+    section.append(message);
+    resultArea.append(section);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "other-forms-list";
+
+  forms.forEach((form) => {
+    const button = document.createElement("button");
+    button.className = "other-form-card";
+    button.type = "button";
+
+    const image = document.createElement("img");
+    image.src = form.image;
+    image.alt = `Sprite de ${form.name}`;
+
+    const name = document.createElement("strong");
+    name.textContent = form.id ? `${form.name} ${formatDexNumber(form.id)}` : form.name;
+
+    const types = document.createElement("span");
+    types.textContent = form.types.join(" / ");
+
+    button.append(image, name, types);
+    button.addEventListener("click", () => {
+      searchInput.value = form.apiName;
+      hideSuggestions();
+      searchPokemon();
+    });
+
+    list.append(button);
+  });
+
+  section.append(list);
+  resultArea.append(section);
 }
 
 // Busca principal: atualiza o card, fraquezas e evoluções do Pokémon escolhido.
@@ -903,7 +1249,7 @@ async function searchPokemon() {
       name: formatApiName(data.name),
       apiName: data.name,
       id: data.id,
-      image: data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "icon.svg",
+      image: getPokemonImage(data) || "icon.svg",
       types: defenseTypes.map((type) => typeNames[type]),
       typeIds: defenseTypes,
       abilities: data.abilities.map((item) => formatApiName(item.ability.name)),
@@ -927,8 +1273,12 @@ async function searchPokemon() {
     naturalMovesLoadedFor = null;
 
     const groups = calculateWeaknesses(defenseTypes);
-    const evolutions = await getEvolutionCards(data);
+    const [evolutions, otherForms] = await Promise.all([
+      getEvolutionCards(data),
+      getOtherForms(data)
+    ]);
     currentEvolutionCards = evolutions;
+    currentOtherForms = otherForms;
 
     renderPokemonResult(pokemon, groups);
     renderTeamPanel();
@@ -1116,7 +1466,7 @@ function createTeamPokemonFromData(data) {
     name: formatApiName(data.name),
     apiName: data.name,
     id: data.id,
-    image: data.sprites.other["official-artwork"].front_default || data.sprites.front_default || "icon.svg",
+    image: getPokemonImage(data) || "icon.svg",
     types: typeIds.map((type) => typeNames[type]),
     typeIds
   };
@@ -1267,6 +1617,8 @@ calculateButton.addEventListener("click", () => {
 
   renderResult(groups);
 });
+
+showTypePokemonButton.addEventListener("click", showPokemonWithSelectedTypes);
 
 searchButton.addEventListener("click", searchPokemon);
 
