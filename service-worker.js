@@ -1,5 +1,4 @@
-const CACHE_NAME = "kelde-io-v3";
-const RUNTIME_CACHE_NAME = "kelde-io-runtime-v2";
+const CACHE_NAME = "keldeio-v2";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -8,11 +7,13 @@ const APP_FILES = [
   "./manifest.json",
   "./icon.svg"
 ];
-const UPDATE_FIRST_FILES = new Set(
-  APP_FILES
-    .filter((file) => ["./", "./index.html", "./style.css", "./script.js"].includes(file))
-    .map((file) => new URL(file, self.registration.scope).href)
-);
+const NETWORK_FIRST_FILES = new Set([
+  new URL("./", self.registration.scope).href,
+  new URL("./index.html", self.registration.scope).href,
+  new URL("./style.css", self.registration.scope).href,
+  new URL("./script.js", self.registration.scope).href,
+  new URL("./manifest.json", self.registration.scope).href
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -29,7 +30,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((cacheName) => ![CACHE_NAME, RUNTIME_CACHE_NAME].includes(cacheName))
+          .filter((cacheName) => cacheName !== CACHE_NAME)
           .map((cacheName) => caches.delete(cacheName))
       );
     }).then(() => self.clients.claim())
@@ -42,7 +43,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const requestUrl = new URL(event.request.url);
-  const isAppFile = UPDATE_FIRST_FILES.has(requestUrl.href);
+  const isAppFile = NETWORK_FIRST_FILES.has(requestUrl.href);
   const isNavigation = event.request.mode === "navigate";
 
   if (isNavigation || isAppFile) {
@@ -56,7 +57,7 @@ self.addEventListener("fetch", (event) => {
         return cachedResponse;
       }
 
-      return fetchAndUpdate(event.request, RUNTIME_CACHE_NAME);
+      return fetchAndUpdate(event.request, CACHE_NAME);
     })
   );
 });
