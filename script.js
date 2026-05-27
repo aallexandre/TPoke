@@ -19,6 +19,10 @@ const teamClearButton = document.querySelector("#team-clear-button");
 const teamPokemonList = document.querySelector("#team-pokemon-list");
 const teamDefenseAnalysis = document.querySelector("#team-defense-analysis");
 const teamOffenseAnalysis = document.querySelector("#team-offense-analysis");
+const quickActionsPanel = document.querySelector("#quick-actions-panel");
+const mobileSearchToggle = document.querySelector("#mobile-search-toggle");
+const mobilePanelClose = document.querySelector("#mobile-panel-close");
+const mobileTeamButton = document.querySelector("#mobile-team-button");
 
 const TEAMS_STORAGE_KEY = "pokeweakness-teams";
 const ACTIVE_TEAM_STORAGE_KEY = "pokeweakness-active-team";
@@ -62,6 +66,7 @@ let currentOtherForms = [];
 let recentlyAddedTeamPokemonId = null;
 let activeTeamIndex = 0;
 let teams = createDefaultTeams();
+let activePokemonTab = "info";
 
 const typeNames = {
   normal: "Normal",
@@ -348,10 +353,43 @@ function hideSuggestions() {
   hideSuggestionList(suggestionsArea);
 }
 
+function isMobileViewport() {
+  return window.matchMedia("(max-width: 680px)").matches;
+}
+
+function openQuickActionsPanel({ focusSearch = true } = {}) {
+  if (!quickActionsPanel || !mobileSearchToggle) {
+    return;
+  }
+
+  quickActionsPanel.classList.add("is-open");
+  mobileSearchToggle.setAttribute("aria-expanded", "true");
+
+  if (focusSearch) {
+    window.setTimeout(() => searchInput.focus(), 120);
+  }
+}
+
+function closeQuickActionsPanel() {
+  if (!quickActionsPanel || !mobileSearchToggle) {
+    return;
+  }
+
+  quickActionsPanel.classList.remove("is-open");
+  mobileSearchToggle.setAttribute("aria-expanded", "false");
+}
+
+function closeQuickActionsPanelOnMobile() {
+  if (isMobileViewport()) {
+    closeQuickActionsPanel();
+  }
+}
+
 function renderSuggestions() {
   renderPokemonSuggestions(searchInput, suggestionsArea, (pokemonName) => {
     searchInput.value = pokemonName;
     hideSuggestions();
+    closeQuickActionsPanelOnMobile();
     searchPokemon();
   });
 }
@@ -441,17 +479,70 @@ function renderPokemonSuggestions(input, area, onSelect) {
   area.classList.add("is-visible");
 }
 
-function renderWeaknessCards(groups) {
+function renderWeaknessCards(groups, parent = resultArea) {
   resultGroups.forEach((group) => {
-    resultArea.append(createResultCard(group.title, groups[group.value]));
+    parent.append(createResultCard(group.title, groups[group.value]));
   });
+}
+
+function createPokemonTabButton(tabId, label) {
+  const button = document.createElement("button");
+  button.className = `pokemon-tab${activePokemonTab === tabId ? " is-active" : ""}`;
+  button.type = "button";
+  button.textContent = label;
+  button.setAttribute("aria-pressed", activePokemonTab === tabId ? "true" : "false");
+
+  button.addEventListener("click", () => {
+    activePokemonTab = tabId;
+    updatePokemonTabs();
+  });
+
+  return button;
+}
+
+function updatePokemonTabs() {
+  document.querySelectorAll(".pokemon-tab").forEach((button) => {
+    const isActive = button.dataset.tab === activePokemonTab;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+
+  document.querySelectorAll(".pokemon-result-section").forEach((section) => {
+    section.classList.toggle("is-active", section.dataset.tab === activePokemonTab);
+  });
+}
+
+function createPokemonTabs() {
+  const tabs = document.createElement("nav");
+  tabs.className = "pokemon-tabs";
+  tabs.setAttribute("aria-label", "Secoes do resultado");
+
+  [
+    ["info", "Info"],
+    ["evolution", "Evolucao"],
+    ["moves", "Golpes"],
+    ["weaknesses", "Fraquezas"],
+    ["forms", "Formas"]
+  ].forEach(([tabId, label]) => {
+    const button = createPokemonTabButton(tabId, label);
+    button.dataset.tab = tabId;
+    tabs.append(button);
+  });
+
+  return tabs;
+}
+
+function createPokemonResultSection(tabId, className = "") {
+  const section = document.createElement("section");
+  section.className = `pokemon-result-section${className ? ` ${className}` : ""}${activePokemonTab === tabId ? " is-active" : ""}`;
+  section.dataset.tab = tabId;
+  return section;
 }
 
 function renderPokemonResult(pokemon, groups) {
   resultArea.innerHTML = "";
 
-  const card = document.createElement("article");
-  card.className = "pokemon-card";
+  const card = createPokemonResultSection("info", "pokemon-card");
 
   const image = document.createElement("img");
   image.src = pokemon.image;
@@ -479,17 +570,20 @@ function renderPokemonResult(pokemon, groups) {
   info.append(title, types, abilities, baseStats, movesButton);
   card.append(image, info);
 
-  resultArea.append(card);
+  resultArea.append(card, createPokemonTabs());
 
-  if (naturalMovesVisible) {
-    renderNaturalMovesSection();
-  }
+  renderNaturalMovesSection();
 
   if (currentEvolutionCards) {
     renderEvolutionSection(currentEvolutionCards);
   }
 
-  renderWeaknessCards(groups);
+  const weaknessSection = createPokemonResultSection("weaknesses", "weaknesses-section");
+  const weaknessTitle = document.createElement("h2");
+  weaknessTitle.textContent = "Fraquezas";
+  weaknessSection.append(weaknessTitle);
+  renderWeaknessCards(groups, weaknessSection);
+  resultArea.append(weaknessSection);
   renderOtherFormsSection(currentOtherForms);
 }
 
@@ -664,14 +758,25 @@ function renderNaturalMovesSection(loadingMessage = "") {
     existingSection.remove();
   }
 
-  const section = document.createElement("section");
-  section.className = "moves-section";
+  const section = createPokemonResultSection("moves", "moves-section");
 
   const title = document.createElement("h2");
   title.textContent = "Golpes naturais";
   section.append(title);
 
-  if (loadingMessage) {
+  if (!naturalMovesVisible) {
+    const intro = document.createElement("p");
+    intro.className = "moves-loading";
+    intro.textContent = "Carregue os golpes naturais quando precisar consultar o moveset.";
+
+    const loadButton = document.createElement("button");
+    loadButton.className = "moves-more-button";
+    loadButton.type = "button";
+    loadButton.textContent = "Carregar golpes";
+    loadButton.addEventListener("click", toggleNaturalMoves);
+
+    section.append(intro, loadButton);
+  } else if (loadingMessage) {
     const loading = document.createElement("p");
     loading.className = "moves-loading";
     loading.textContent = loadingMessage;
@@ -720,8 +825,8 @@ function renderNaturalMovesSection(loadingMessage = "") {
     }
   }
 
-  const pokemonCard = resultArea.querySelector(".pokemon-card");
-  pokemonCard.after(section);
+  const tabs = resultArea.querySelector(".pokemon-tabs");
+  tabs.after(section);
 }
 
 function createEvolutionPokemonCard(evolution) {
@@ -744,6 +849,7 @@ function createEvolutionPokemonCard(evolution) {
   button.addEventListener("click", () => {
     searchInput.value = evolution.name;
     hideSuggestions();
+    closeQuickActionsPanelOnMobile();
     searchPokemon();
   });
 
@@ -799,8 +905,7 @@ function createEvolutionBranch(evolution) {
 }
 
 function renderEvolutionSection(evolutions) {
-  const section = document.createElement("section");
-  section.className = "evolution-section";
+  const section = createPokemonResultSection("evolution", "evolution-section");
 
   const title = document.createElement("h2");
   title.textContent = "Evoluções";
@@ -924,6 +1029,7 @@ function createTypeMatchCard(pokemon) {
 
   button.addEventListener("click", () => {
     searchInput.value = pokemon.apiName;
+    closeQuickActionsPanelOnMobile();
     searchPokemon();
   });
 
@@ -1192,8 +1298,7 @@ async function getOtherForms(pokemonData) {
 }
 
 function renderOtherFormsSection(forms) {
-  const section = document.createElement("section");
-  section.className = "other-forms-section";
+  const section = createPokemonResultSection("forms", "other-forms-section");
 
   const title = document.createElement("h2");
   title.textContent = "Outras Formas";
@@ -1230,6 +1335,7 @@ function renderOtherFormsSection(forms) {
     button.addEventListener("click", () => {
       searchInput.value = form.apiName;
       hideSuggestions();
+      closeQuickActionsPanelOnMobile();
       searchPokemon();
     });
 
@@ -1251,6 +1357,7 @@ async function searchPokemon() {
   }
 
   hideSuggestions();
+  closeQuickActionsPanelOnMobile();
   searchButton.disabled = true;
   searchButton.textContent = "Buscando...";
 
@@ -1296,6 +1403,7 @@ async function searchPokemon() {
     ]);
     currentEvolutionCards = evolutions;
     currentOtherForms = otherForms;
+    activePokemonTab = "info";
 
     renderPokemonResult(pokemon, groups);
     renderTeamPanel();
@@ -1637,10 +1745,14 @@ calculateButton.addEventListener("click", () => {
   const defenseTypes = typeTwo ? [typeOne, typeTwo] : [typeOne];
   const groups = calculateWeaknesses(defenseTypes);
 
+  closeQuickActionsPanelOnMobile();
   renderResult(groups);
 });
 
-showTypePokemonButton.addEventListener("click", showPokemonWithSelectedTypes);
+showTypePokemonButton.addEventListener("click", () => {
+  closeQuickActionsPanelOnMobile();
+  showPokemonWithSelectedTypes();
+});
 
 searchButton.addEventListener("click", searchPokemon);
 
@@ -1666,6 +1778,28 @@ teamOpenButton.addEventListener("click", openTeamPanel);
 teamCloseButton.addEventListener("click", closeTeamPanel);
 teamAddCurrentButton.addEventListener("click", addCurrentPokemonToTeam);
 teamClearButton.addEventListener("click", clearActiveTeam);
+
+if (mobileSearchToggle) {
+  mobileSearchToggle.addEventListener("click", () => {
+    if (quickActionsPanel.classList.contains("is-open")) {
+      closeQuickActionsPanel();
+      return;
+    }
+
+    openQuickActionsPanel();
+  });
+}
+
+if (mobilePanelClose) {
+  mobilePanelClose.addEventListener("click", closeQuickActionsPanel);
+}
+
+if (mobileTeamButton) {
+  mobileTeamButton.addEventListener("click", () => {
+    closeQuickActionsPanelOnMobile();
+    openTeamPanel();
+  });
+}
 
 teamNameInput.addEventListener("input", () => {
   getActiveTeam().name = teamNameInput.value.trim() || `Time ${activeTeamIndex + 1}`;

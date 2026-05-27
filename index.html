@@ -13,6 +13,13 @@
 </head>
 <body>
   <main class="container">
+    <div class="mobile-command-center">
+      <button id="mobile-search-toggle" class="mobile-search-toggle" type="button" aria-expanded="false" aria-controls="quick-actions-panel">
+        <span class="mobile-search-label">Buscar Pokemon, tipos ou time</span>
+        <span class="mobile-search-icon" aria-hidden="true">Go</span>
+      </button>
+    </div>
+
     <header class="app-header">
       <div>
         <span class="app-kicker">Pokemon battle tool</span>
@@ -21,7 +28,12 @@
       <button id="team-open-button" class="team-open-button" type="button">Meu Time</button>
     </header>
 
-    <section class="calculator" aria-label="Calculadora de fraqueza Pokemon">
+    <section id="quick-actions-panel" class="calculator" aria-label="Calculadora de fraqueza Pokemon">
+      <div class="mobile-panel-heading">
+        <span>Acoes rapidas</span>
+        <button id="mobile-panel-close" class="mobile-panel-close" type="button" aria-label="Fechar painel">x</button>
+      </div>
+
       <div class="search-field">
         <label for="pokemon-search">Nome do Pokémon</label>
         <input id="pokemon-search" type="search" placeholder="Ex: pikachu">
@@ -82,6 +94,7 @@
 
       <button id="calculate-button" type="button">Calcular</button>
       <button id="show-type-pokemon-button" class="secondary-button" type="button">Mostrar Pokémon com essa tipagem</button>
+      <button id="mobile-team-button" class="secondary-button mobile-team-button" type="button">Acessar Meu Time</button>
     </section>
 
     <section id="result" class="result" aria-live="polite"></section>
