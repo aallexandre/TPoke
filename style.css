@@ -2689,3 +2689,43 @@ select:focus {
   border-radius: var(--radius);
   box-shadow: var(--shadow-panel);
 }
+
+/* Pokemon card alignment parity */
+.pokemon-card,
+.pokemon-hero {
+  justify-items: stretch;
+  align-items: center;
+  text-align: left;
+}
+
+.pokemon-card > div,
+.pokemon-hero > div {
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+
+.pokemon-card h2,
+.pokemon-card p,
+.pokemon-number {
+  text-align: left;
+}
+
+.pokemon-card > img,
+.pokemon-hero > img {
+  justify-self: start;
+}
+
+@media (max-width: 900px) {
+  .pokemon-card,
+  .pokemon-hero {
+    grid-template-columns: 96px minmax(0, 1fr);
+    justify-items: stretch;
+    text-align: left;
+  }
+
+  .pokemon-card > img,
+  .pokemon-hero > img {
+    justify-self: start;
+  }
+}

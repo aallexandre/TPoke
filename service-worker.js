@@ -1,4 +1,4 @@
-const CACHE_NAME = "keldeio-v2";
+const CACHE_NAME = "keldeio-v3";
 const APP_FILES = [
   "./",
   "./index.html",
