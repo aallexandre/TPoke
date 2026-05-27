@@ -59,6 +59,7 @@ let naturalMovesExpanded = false;
 let naturalMovesLoadedFor = null;
 let currentEvolutionCards = null;
 let currentOtherForms = [];
+let recentlyAddedTeamPokemonId = null;
 let activeTeamIndex = 0;
 let teams = createDefaultTeams();
 
@@ -828,7 +829,23 @@ function renderError(message) {
 
 function renderLoading(titleText, message) {
   resultArea.innerHTML = "";
-  resultArea.append(createResultCard(titleText, [message]));
+
+  const card = document.createElement("article");
+  card.className = "result-card loading-card";
+
+  const spinner = document.createElement("span");
+  spinner.className = "loading-spinner";
+
+  const content = document.createElement("div");
+  const title = document.createElement("h2");
+  title.textContent = titleText;
+
+  const text = document.createElement("p");
+  text.textContent = message;
+
+  content.append(title, text);
+  card.append(spinner, content);
+  resultArea.append(card);
 }
 
 function setSelectedTypes(types) {
@@ -1359,6 +1376,7 @@ function renderTeamPanel() {
 function setTeamMessage(message, isError = true) {
   teamMessage.textContent = message;
   teamMessage.classList.toggle("is-success", !isError);
+  teamMessage.classList.toggle("is-loading", message.startsWith("Buscando"));
 }
 
 function renderTeamTabs() {
@@ -1398,7 +1416,7 @@ function renderTeamPokemon() {
 
   activeTeam.pokemon.forEach((pokemon, index) => {
     const card = document.createElement("article");
-    card.className = "team-pokemon-card";
+    card.className = `team-pokemon-card${pokemon.id === recentlyAddedTeamPokemonId ? " is-new" : ""}`;
 
     const image = document.createElement("img");
     image.src = pokemon.image;
@@ -1451,9 +1469,13 @@ function addPokemonObjectToActiveTeam(pokemon) {
   }
 
   activeTeam.pokemon.push({ ...pokemon });
+  recentlyAddedTeamPokemonId = pokemon.id;
   saveTeams();
   renderTeamPanel();
   setTeamMessage(`${pokemon.name} foi adicionado ao time.`, false);
+  window.setTimeout(() => {
+    recentlyAddedTeamPokemonId = null;
+  }, 420);
   return true;
 }
 

@@ -241,7 +241,7 @@ button:disabled {
 
 .suggestions.is-visible {
   display: block;
-  animation: liftIn 150ms ease both;
+  animation: liftIn 180ms ease both;
 }
 
 .suggestion-button {
@@ -255,6 +255,7 @@ button:disabled {
   background: transparent;
   border-radius: 0;
   text-align: left;
+  animation: suggestionIn 170ms ease both;
 }
 
 .suggestion-button:hover,
@@ -262,6 +263,10 @@ button:disabled {
   color: #061018;
   background: linear-gradient(135deg, var(--cyan), var(--gold));
   outline: none;
+}
+
+.suggestion-button:active {
+  transform: scale(0.985);
 }
 
 .suggestion-text {
@@ -345,6 +350,43 @@ button:disabled {
   gap: 18px;
   align-items: center;
   border-color: rgba(56, 212, 232, 0.28);
+  animation: resultEnter 260ms ease both;
+}
+
+.moves-section {
+  overflow: hidden;
+  animation: sectionReveal 240ms ease both;
+}
+
+.loading-card {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: resultEnter 220ms ease both;
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: 3px solid rgba(126, 223, 240, 0.22);
+  border-top-color: var(--cyan);
+  border-radius: 999px;
+  animation: spin 820ms linear infinite;
+}
+
+.moves-loading::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border: 2px solid rgba(126, 223, 240, 0.22);
+  border-top-color: var(--cyan);
+  border-radius: 999px;
+  vertical-align: -2px;
+  animation: spin 820ms linear infinite;
 }
 
 .pokemon-card > img {
@@ -475,6 +517,20 @@ button:disabled {
   text-align: left;
 }
 
+.team-pokemon-card {
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.team-pokemon-card:hover {
+  border-color: rgba(56, 212, 232, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px) scale(1.005);
+}
+
+.team-pokemon-card.is-new {
+  animation: teamCardPop 340ms ease both;
+}
+
 .type-match-card:hover,
 .type-match-card:focus,
 .other-form-card:hover,
@@ -485,6 +541,16 @@ button:disabled {
   background: linear-gradient(135deg, var(--cyan), var(--gold));
   border-color: transparent;
   outline: none;
+  box-shadow: 0 0 0 1px rgba(56, 212, 232, 0.24), 0 12px 28px rgba(0, 0, 0, 0.24);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.type-match-card:active,
+.other-form-card:active,
+.evolution-card:active,
+.team-pokemon-card:active,
+.pokemon-card:active {
+  transform: scale(0.99);
 }
 
 .type-match-card img,
@@ -592,6 +658,7 @@ button:disabled {
   color: var(--cyan-soft);
   font-size: 1.05rem;
   font-weight: 900;
+  animation: connectorPulse 1800ms ease-in-out infinite;
 }
 
 .evolution-badges {
@@ -696,6 +763,19 @@ button:disabled {
   color: var(--success);
 }
 
+.team-message.is-loading:not(:empty)::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 7px;
+  border: 2px solid rgba(126, 223, 240, 0.22);
+  border-top-color: var(--cyan);
+  border-radius: 999px;
+  vertical-align: -1px;
+  animation: spin 820ms linear infinite;
+}
+
 .team-panel h3 {
   margin-top: 24px;
   margin-bottom: 12px;
@@ -725,12 +805,87 @@ button:disabled {
   }
 }
 
+@keyframes resultEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    max-height: 1800px;
+    transform: translateY(0);
+  }
+}
+
+@keyframes suggestionIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes teamCardPop {
+  0% {
+    transform: scale(0.97);
+    border-color: var(--cyan);
+  }
+
+  58% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px rgba(56, 212, 232, 0.16);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes connectorPulse {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(1px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

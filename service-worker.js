@@ -1,4 +1,4 @@
-const CACHE_NAME = "kelde-io-v1";
+const CACHE_NAME = "kelde-io-v2";
 const RUNTIME_CACHE_NAME = "kelde-io-runtime-v1";
 const APP_FILES = [
   "./",
